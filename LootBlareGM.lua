@@ -37,14 +37,14 @@ local RAID_CLASS_COLORS = {
 local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
 local MSSR_Text_Color = "FFFF00FF"
-local MS_Text_Color = "FFFF0000"
+local MS_Text_Color = "FF1900FF"
 local OSSR_TEXT_COLOR = "FFFFFF00"
-local OS_TEXT_COLOR = "FF00FF00"
+local OS_TEXT_COLOR = "FFEC9512"
 local TM_TEXT_COLOR = "FF00FFFF"
 
 local CORE_TEXT_COLOR = "FFFF00FF"
-local RAIDER_TEXT_COLOR = "FFFF0000"
-local CASUAL_TEXT_COLOR = "FF00FF00"
+local RAIDER_TEXT_COLOR = "FF1900FF"
+local CASUAL_TEXT_COLOR = "FFE5FF00"
 local MEMPUG_TEXT_COLOR = "FF00FFFF"
 
 local LB_PREFIX = "LootBlare"
@@ -102,7 +102,7 @@ local function colorMsg(message)
   elseif string.find(msg, "-"..tmogRollCap) then
     textColor = TM_TEXT_COLOR
   end
-  if message.rank == "Elara/Leader" or message.rank == "Pandia/Co-GM" or message.rank == "Member of Honor" or message.rank == "Ananke/Officer" or message.rank == "Kalyke/R.Leader" or message.rank == "Sinope/Core" then
+  if message.rank == "Elara/Leader" or message.rank == "Pandia/Co-GM" or message.rank == "Optio/CL" or message.rank == "Ananke/Officer" or message.rank == "Kalyke/R.Leader" or message.rank == "Sinope/Core" then
     rankColor = CORE_TEXT_COLOR
   elseif  message.rank == "Isonoe/Raider" then
     rankColor = RAIDER_TEXT_COLOR
@@ -209,7 +209,7 @@ end
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
   frame:SetWidth(240) -- Adjust size as needed
-  frame:SetHeight(220)
+  frame:SetHeight(400)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
       bgFile = "Interface/Tooltips/UI-Tooltip-Background",
