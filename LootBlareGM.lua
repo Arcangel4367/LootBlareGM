@@ -35,6 +35,7 @@ local RAID_CLASS_COLORS = {
   ["Paladin"] = "FFF58CBA",
 }
 local ADDON_TEXT_COLOR = "FFEDD8BB"
+local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
 local MSSR_Text_Color = "FFFF00FF"
 local MS_Text_Color = "FFFFFF00"
