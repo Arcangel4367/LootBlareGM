@@ -34,7 +34,7 @@ local RAID_CLASS_COLORS = {
   ["Warlock"] = "FF9482C9",
   ["Paladin"] = "FFF58CBA",
 }
-local ADDON_TEXT_COLOR = "FFEDD8BB"
+
 local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
 local MSSR_Text_Color = "FFFF00FF"
@@ -65,6 +65,8 @@ local function resetRolls()
   tmogRollMessages = {}
   rollers = {}
 end
+
+
 
 local function sortRolls()
   table.sort(MSSRRollMessages, function(a, b)
@@ -344,7 +346,7 @@ local function ShowFrame(frame,duration,item)
 end
 
 local function CreateTextArea(frame)
-  local textArea = frame:CreateFontString(nil, "OVERLAY", "Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf")
+  local textArea = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   textArea:SetFont("Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf", 12, "")
   textArea:SetHeight(150) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
@@ -429,6 +431,13 @@ local function ExtractItemLinksFromMessage(message)
     table.insert(itemLinks, link)
   end
   return itemLinks
+end
+
+local function RequestML()
+  local lootMethod, masterLooterPartyID = GetLootMethod()
+    if lootMethod == "master" and masterLooterPartyID then
+      SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID") -- fetch ML info
+    end
 end
 
 local function IsSenderMasterLooter(sender)
@@ -527,8 +536,8 @@ local function HandleChatMessage(event, message, sender)
       isRolling = true
       ShowFrame(itemRollFrame,FrameShownDuration,links[1])
     end
-  --elseif event == "PLAYER_ENTERING_WORLD" then
-    --SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID") -- fetch ML info
+  elseif event == "PLAYER_ENTERING_WORLD" then
+    RequestML()
   elseif event == "ADDON_LOADED"then
     if FrameShownDuration == nil then FrameShownDuration = 15 end
     if FrameAutoClose == nil then FrameAutoClose = true end
@@ -539,6 +548,10 @@ local function HandleChatMessage(event, message, sender)
     else
       SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID")
     end
+  elseif event == "PARTY_MEMBERS_CHANGED"then
+    RequestML()
+  elseif event == "RAID_ROSTER_UPDATE"then
+    RequestML()
   elseif event == "CHAT_MSG_ADDON" and arg1 == LB_PREFIX then
     local prefix, message, channel, sender = arg1, arg2, arg3, arg4
 
@@ -552,7 +565,10 @@ local function HandleChatMessage(event, message, sender)
     -- Someone is setting the master looter
     if string.find(message, LB_SET_ML) then
       local _,_, newML = string.find(message, "ML set to (%S+)")
-      masterLooter = newML
+      if masterLooter ~= newML then
+        lb_print("Masterlooter set to |cFF00FF00" .. newML .. "|r")
+        masterLooter = newML
+      end
     end
     -- Someone is setting the roll time
     if string.find(message, LB_SET_ROLL_TIME) then
@@ -566,10 +582,6 @@ local function HandleChatMessage(event, message, sender)
   end
 end
 
-function itemRollFrame:PLAYER_ENTERING_WORLD()
-  IsSenderMasterLooter("player")
-end
-
 itemRollFrame:RegisterEvent("ADDON_LOADED")
 itemRollFrame:RegisterEvent("CHAT_MSG_SYSTEM")
 itemRollFrame:RegisterEvent("CHAT_MSG_RAID_WARNING")
@@ -577,6 +589,9 @@ itemRollFrame:RegisterEvent("CHAT_MSG_RAID")
 itemRollFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
 itemRollFrame:RegisterEvent("CHAT_MSG_ADDON")
 itemRollFrame:RegisterEvent("CHAT_MSG_LOOT")
+itemRollFrame:RegisterEvent("RAID_ROSTER_UPDATE")
+itemRollFrame:RegisterEvent("PARTY_MEMBERS_CHANGED")
+itemRollFrame:RegisterEvent("PARTY_LOOT_METHOD_CHANGED")
 itemRollFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 itemRollFrame:SetScript("OnEvent", function () HandleChatMessage(event,arg1,arg2) end)
 
