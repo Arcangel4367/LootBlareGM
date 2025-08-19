@@ -111,7 +111,7 @@ local function colorMsg(message)
     rankColor = RAIDER_TEXT_COLOR
   elseif  message.rank == "Himale/Casual" then
     rankColor = CASUAL_TEXT_COLOR
-  elseif  message.rank == "Non-Guildie" then
+  elseif  message.rank == "Callisto/Member" or message.rank == "Non-Guildie" then
     rankColor = MEMPUG_TEXT_COLOR
   end
 
