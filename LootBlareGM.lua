@@ -34,13 +34,18 @@ local RAID_CLASS_COLORS = {
   ["Warlock"] = "FF9482C9",
   ["Paladin"] = "FFF58CBA",
 }
-local ADDON_TEXT_COLOR= "FFEDD8BB"
+local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
-local MSSR_Text_Color = "ffff00ff"
-local MS_Text_Color = "FFFF0000"
-local OSSR_TEXT_COLOR = "FFFFFF00"
-local OS_TEXT_COLOR = "FF00FF00"
+local MSSR_Text_Color = "FFFF00FF"
+local MS_Text_Color = "FFFFFF00"
+local OSSR_TEXT_COLOR = "FF776CDA"
+local OS_TEXT_COLOR = "FFEC9512"
 local TM_TEXT_COLOR = "FF00FFFF"
+
+local CORE_TEXT_COLOR = "FFFF00FF"
+local RAIDER_TEXT_COLOR = "FFFFFF00"
+local CASUAL_TEXT_COLOR = "FFEC9512"
+local MEMPUG_TEXT_COLOR = "FFFFFFFF"
 
 local LB_PREFIX = "LootBlare"
 local LB_GET_DATA = "get data"
@@ -84,6 +89,7 @@ local function colorMsg(message)
   _,_,_, message_end = string.find(msg, "(%S+)%s+(.+)")
   classColor = RAID_CLASS_COLORS[class]
   textColor = DEFAULT_TEXT_COLOR
+  rankColor = DEFAULT_TEXT_COLOR
 
   if string.find(msg, "-"..MSSRRollCap) then
     textColor = MSSR_Text_Color
@@ -96,8 +102,17 @@ local function colorMsg(message)
   elseif string.find(msg, "-"..tmogRollCap) then
     textColor = TM_TEXT_COLOR
   end
+  if message.rank == "Elara/Leader" or message.rank == "Pandia/Co-GM" or message.rank == "Optio/CL" or message.rank == "Ananke/Officer" or message.rank == "Kalyke/R.Leader" or message.rank == "Sinope/Core" then
+    rankColor = CORE_TEXT_COLOR
+  elseif  message.rank == "Isonoe/Raider" then
+    rankColor = RAIDER_TEXT_COLOR
+  elseif  message.rank == "Himale/Casual" then
+    rankColor = CASUAL_TEXT_COLOR
+  elseif  message.rank == "Non-Guildie" then
+    rankColor = MEMPUG_TEXT_COLOR
+  end
 
-  colored_msg = "".. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
+  colored_msg = "|c".. rankColor .. "" .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
   return colored_msg
 end
 
@@ -194,7 +209,7 @@ end
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
   frame:SetWidth(240) -- Adjust size as needed
-  frame:SetHeight(220)
+  frame:SetHeight(400)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
       bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -328,7 +343,8 @@ local function ShowFrame(frame,duration,item)
 end
 
 local function CreateTextArea(frame)
-  local textArea = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  local textArea = frame:CreateFontString(nil, "OVERLAY", "Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf")
+  textArea:SetFont("Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf", 12, "")
   textArea:SetHeight(150) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
   textArea:SetJustifyH("LEFT")
@@ -356,7 +372,7 @@ local function GetRankOfRoller(rollerName)
           return rankName -- Return the rank as a string (e.g., Core, Raider, Member)
       end
     end
-    return "none" -- Return nil if the player is not found in the raid
+    return "Non-Guildie" -- Return nil if the player is not found in the raid
 end
 
 local function UpdateTextArea(frame)
@@ -428,6 +444,20 @@ local function IsSenderMasterLooter(sender)
   return false
 end
 
+local function GetMasterLooterInParty()
+  local lootMethod, masterLooterPartyID = GetLootMethod()
+  if lootMethod == "master" and masterLooterPartyID then
+    if masterLooterPartyID == 0 then
+      return UnitName("player")
+    else
+      local senderUID = "party" .. masterLooterPartyID
+      local masterLooterName = UnitName(senderUID)
+      return masterLooterName
+    end
+  end
+  return nil
+end
+
 local function HandleChatMessage(event, message, sender)
   if (event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER") then
     local _,_,duration = string.find(message, "Roll time set to (%d+) seconds")
@@ -496,8 +526,8 @@ local function HandleChatMessage(event, message, sender)
       isRolling = true
       ShowFrame(itemRollFrame,FrameShownDuration,links[1])
     end
-  elseif event == "PLAYER_ENTERING_WORLD" then
-    SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID") -- fetch ML info
+  --elseif event == "PLAYER_ENTERING_WORLD" then
+    --SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID") -- fetch ML info
   elseif event == "ADDON_LOADED"then
     if FrameShownDuration == nil then FrameShownDuration = 15 end
     if FrameAutoClose == nil then FrameAutoClose = true end
@@ -533,6 +563,10 @@ local function HandleChatMessage(event, message, sender)
       end
     end
   end
+end
+
+function itemRollFrame:PLAYER_ENTERING_WORLD()
+  IsSenderMasterLooter("player")
 end
 
 itemRollFrame:RegisterEvent("ADDON_LOADED")
