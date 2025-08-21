@@ -211,7 +211,11 @@ end
 
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
-  frame:SetWidth(240) -- Adjust size as needed
+  if IsAddOnLoaded("pfUI") then
+    frame:SetWidth(240) -- Adjust size as needed
+  else 
+    frame:SetWidth(270)
+  end
   frame:SetHeight(400)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
@@ -350,7 +354,7 @@ local function CreateTextArea(frame)
   if IsAddOnLoaded("pfUI") then
     textArea:SetFont("Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf", 10)
   else
-    textArea:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    textArea:SetFont("Fonts\\FRIZQT__.TTF", 11)
   end
   textArea:SetHeight(300) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
