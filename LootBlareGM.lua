@@ -347,8 +347,12 @@ end
 
 local function CreateTextArea(frame)
   local textArea = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  textArea:SetFont("Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf", 12, "")
-  textArea:SetHeight(150) -- Size of the icon
+  if IsAddOnLoaded("pfUI") then
+    textArea:SetFont("Interface\\AddOns\\LootBlare\\Myriad-Pro.ttf", 10)
+  else
+    textArea:SetFont("Fonts\\FRIZQT__.TTF", 10)
+  end
+  textArea:SetHeight(300) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
   textArea:SetJustifyH("LEFT")
   textArea:SetJustifyV("TOP")
@@ -391,31 +395,31 @@ local function UpdateTextArea(frame)
   sortRolls()
 
   for i, v in ipairs(MSSRRollMessages) do
-    if count >= 4 then break end
-    colored_msg = v.msg
-    text = text .. colorMsg(v) .. "\n"
-    count = count + 1
-  end
-  for i, v in ipairs(MSRollMessages) do
-    if count >= 5 then break end
-    colored_msg = v.msg
-    text = text .. colorMsg(v) .. "\n"
-    count = count + 1
-  end
-  for i, v in ipairs(OSSRRollMessages) do
-    if count >= 7 then break end
-    colored_msg = v.msg
-    text = text .. colorMsg(v) .. "\n"
-    count = count + 1
-  end
-  for i, v in ipairs(OSRollMessages) do
     if count >= 8 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
+  for i, v in ipairs(MSRollMessages) do
+    if count >= 30 then break end
+    colored_msg = v.msg
+    text = text .. colorMsg(v) .. "\n"
+    count = count + 1
+  end
+  for i, v in ipairs(OSSRRollMessages) do
+    if count >= 8 then break end
+    colored_msg = v.msg
+    text = text .. colorMsg(v) .. "\n"
+    count = count + 1
+  end
+  for i, v in ipairs(OSRollMessages) do
+    if count >= 30 then break end
+    colored_msg = v.msg
+    text = text .. colorMsg(v) .. "\n"
+    count = count + 1
+  end
   for i, v in ipairs(tmogRollMessages) do
-    if count >= 9 then break end
+    if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
