@@ -115,7 +115,7 @@ local function colorMsg(message)
     rankColor = MEMPUG_TEXT_COLOR
   end
 
-  colored_msg = "|c".. rankColor .. "" .. message.rankI .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
+  colored_msg = "|c".. rankColor .. "" .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
   return colored_msg
 end
 
