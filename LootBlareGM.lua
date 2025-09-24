@@ -87,12 +87,12 @@ local function sortRolls()
 end
 
 local function colorMsg(message)
-  msg = message.msg
-  class = message.class
+  local msg = message.msg
+  local class = message.class
   _,_,_, message_end = string.find(msg, "(%S+)%s+(.+)")
-  classColor = RAID_CLASS_COLORS[class]
-  textColor = DEFAULT_TEXT_COLOR
-  rankColor = DEFAULT_TEXT_COLOR
+  local classColor = RAID_CLASS_COLORS[class]
+  local textColor = DEFAULT_TEXT_COLOR
+  local rankColor = DEFAULT_TEXT_COLOR
 
   if string.find(msg, "-"..MSSRRollCap) then
     textColor = MSSR_Text_Color
@@ -105,17 +105,17 @@ local function colorMsg(message)
   elseif string.find(msg, "-"..tmogRollCap) then
     textColor = TM_TEXT_COLOR
   end
-  if message.rank == "Elara/Leader" or message.rank == "Pandia/Co-GM" or message.rank == "Optio/CL" or message.rank == "Ananke/Officer" or message.rank == "Kalyke/R.Leader" or message.rank == "Sinope/Core" then
+  if message.rankI <= 4 then
     rankColor = CORE_TEXT_COLOR
-  elseif  message.rank == "Isonoe/Raider" then
+  elseif  message.rankI == 5 then
     rankColor = RAIDER_TEXT_COLOR
-  elseif  message.rank == "Himale/Casual" then
+  elseif  message.rankI == 6 then
     rankColor = CASUAL_TEXT_COLOR
-  elseif  message.rank == "Callisto/Member" or message.rank == "Non-Guildie" then
+  elseif  message.rankI >= 7 then
     rankColor = MEMPUG_TEXT_COLOR
   end
 
-  colored_msg = "|c".. rankColor .. "" .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
+  colored_msg = "|c".. rankColor .. ""  .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
   return colored_msg
 end
 
@@ -386,6 +386,17 @@ local function GetRankOfRoller(rollerName)
     return "Non-Guildie" -- Return nil if the player is not found in the raid
 end
 
+local function GetRankOfRollerI(rollerName)
+  -- Iterate through the raid roster
+  for i = 1, GetNumGuildMembers() do
+      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
+      if name == rollerName then
+          return rankIndex-- Return the rank as a string (e.g., Core, Raider, Member)
+      end
+    end
+    return 13 -- Return nil if the player is not found in the raid
+end
+
 local function UpdateTextArea(frame)
   if not frame.textArea then
     frame.textArea = CreateTextArea(frame)
@@ -512,7 +523,7 @@ local function HandleChatMessage(event, message, sender)
       if roller and roll and rollers[roller] == nil then
         roll = tonumber(roll)
         rollers[roller] = 1
-        message = { rank = GetRankOfRoller(roller), roller = roller, roll = roll, msg = message, class = GetClassOfRoller(roller) }
+        message = { rank = GetRankOfRoller(roller), rankI = GetRankOfRollerI(roller), roller = roller, roll = roll, msg = message, class = GetClassOfRoller(roller) }
         if maxRoll == tostring(MSSRRollCap) then
           table.insert(MSSRRollMessages, message)
         elseif maxRoll == tostring(MSRollCap) then
