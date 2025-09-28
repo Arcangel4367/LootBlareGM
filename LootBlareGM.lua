@@ -24,7 +24,7 @@ local tmogRollCap = 50
 --EPGP Settings--
 PriceDB = nil
 local RaidEPGP = 0
-local TestZone = 1
+local TestZone = 0
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
