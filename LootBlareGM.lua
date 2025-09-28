@@ -29,7 +29,6 @@ local Naxx = 0
 local K40 = 1
 local MSPrice = 0
 local OSPrice = 0
-local CurrentEP = 0
 
 local BUTTON_WIDTH = 32
 local BUTTON_COUNT = 5
@@ -572,6 +571,7 @@ local function swapButtons()
     itemRollFrame.BiDOS:Show()
     itemRollFrame.EPGPl1:Show()
     itemRollFrame.EPGPl2:Show()
+    itemRollFrame.EP:Show()
   elseif RaidEPGP == 0 then
     itemRollFrame.MSSR:Show()
     itemRollFrame.MS:Show()
@@ -582,6 +582,7 @@ local function swapButtons()
     itemRollFrame.BiDOS:Hide()
     itemRollFrame.EPGPl1:Hide()
     itemRollFrame.EPGPl2:Hide()
+    itemRollFrame.EP:Hide()
   end
 end
 
