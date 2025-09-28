@@ -3,6 +3,7 @@
 ## Author: Ehawne, Sivent, Gulolio, Arcangel
 ## Version: 1.1.11
 ## Notes: Make loot rolls obvious
-## SavedVariables:FrameShownDuration, FrameAutoClose
+## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP
 
 LootBlareGM.lua
+Database\Kara40.lua
