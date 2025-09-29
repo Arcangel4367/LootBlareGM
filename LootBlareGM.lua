@@ -24,11 +24,12 @@ local tmogRollCap = 50
 --EPGP Settings--
 PriceDB = nil
 local RaidEPGP = 0
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
 local OSPrice = 0
+local Ratio = 0
 
 local BUTTON_WIDTH = 32
 local BUTTON_COUNT = 5
@@ -65,6 +66,8 @@ local LB_PREFIX = "LootBlare"
 local LB_GET_DATA = "get data"
 local LB_SET_ML = "ML set to "
 local LB_SET_ROLL_TIME = "Roll time set to "
+local LB_BID = "Bid on item: "
+local LB_AWARD = "Awarded to: "
 
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
@@ -85,10 +88,10 @@ end
 
 local function sortRolls()
   table.sort(EPGPMSRollMessages, function(a, b)
-    return a.maxRoll < b.maxRoll
+    return a.ratio > b.ratio
   end)
   table.sort(EPGPOSRollMessages, function(a, b)
-    return a.maxRoll < b.maxRoll
+    return a.ratio > b.ratio
   end)
   table.sort(MSSRRollMessages, function(a, b)
     return a.roll > b.roll
@@ -141,19 +144,15 @@ local function colorMsg(message)
 end
 
 local function colorEPGPMsg(message)
-  local msg = message.msg
   local class = message.class
-  _,_,_, message_end = string.find(msg, "(%S+)%s+(.+)")
   local classColor = RAID_CLASS_COLORS[class]
   local textColor = DEFAULT_TEXT_COLOR
   local rankColor = DEFAULT_TEXT_COLOR
 
-  if string.find(msg,MSPrice.. "-") then
+  if message.type == "MS" then
     textColor = MS_Text_Color
-    message.type = "MS"
-  elseif string.find(msg,OSPrice.. "-") then
+  elseif message.type == "OS" then
     textColor = OS_TEXT_COLOR
-    message.type = "OS"
   end
   if message.rankI <= 4 then
     rankColor = CORE_TEXT_COLOR
@@ -164,7 +163,7 @@ local function colorEPGPMsg(message)
   elseif  message.rankI >= 7 then
     rankColor = MEMPUG_TEXT_COLOR
   end
-  local colored_msg = "|c".. rankColor .. ""  .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message.type .. " " .. message.maxRoll .. "|r"
+  local colored_msg = "|c".. rankColor .. message.rank .. " |c" .. classColor .. message.roller .. "|r |c" .. textColor .. message.type .. "|r |cFF0070DE".. message.ratio .. "|r"
   return colored_msg
 end
 
@@ -230,7 +229,7 @@ local function CreateActionButton(frame, buttonText, tooltipText, index, onClick
   bg:SetAllPoints(button)
   bg:SetTexture(1, 1, 1, 1) -- White texture
   bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray background
-
+  
   button:SetScript("OnMouseDown", function(self)
       bg:SetVertexColor(0.6, 0.6, 0.6, 1) -- Even lighter gray when pressed
   end)
@@ -289,18 +288,28 @@ local function CreateItemRollFrame()
   local EPGPl1 = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   local EPGPl2 = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   local EP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
+  local GP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
+  local EPGPRatio = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   EPGPl1:SetPoint("RIGHT", frame, "RIGHT", -35, 175)
   EPGPl1:SetFont(EPGPl1:GetFont(), 13)
   EPGPl2:SetPoint("LEFT", EPGPl1, "BOTTOMLEFT", 0, -10)
   EPGPl2:SetFont(EPGPl2:GetFont(), 10)
-  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 110, 26)
-  EP:SetFont(EP:GetFont(), 14)
-  EP:SetText("Your EP:")
+  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
+  EP:SetFont(EP:GetFont(), 10)
+  EP:SetText("EP:")
+  GP:SetPoint("LEFT", EP, "BOTTOMLEFT", -2.5, -8)
+  GP:SetFont(EP:GetFont(), 10)
+  GP:SetText("GP:")
+  EPGPRatio:SetPoint("LEFT", EP, "TOPLEFT", -25, 8)
+  EPGPRatio:SetFont(EP:GetFont(), 10)
+  EPGPRatio:SetText("Priority:")
   EPGPl1:SetText("EPGP Prices")
-  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r  |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_TEXT_COLOR.."OS: 0|r")
   frame.EPGPl1 = EPGPl1
   frame.EPGPl2 = EPGPl2
   frame.EP = EP
+  frame.GP = GP
+  frame.EPGPRatio = EPGPRatio
   
   frame.MSSR = CreateActionButton(frame, "MS SR", "Roll for MS SR", 1, function() RandomRoll(1,MSSRRollCap) end)
   frame.MS = CreateActionButton(frame, "MS", "Roll for MS", 2, function() RandomRoll(1,MSRollCap) end)
@@ -308,8 +317,8 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() RandomRoll(MSPrice, PlayerEP) end)
-  frame.BiDOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() RandomRoll(OSPrice, PlayerEP) end)
+  frame.BidMS = CreateActionButton(frame, "MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end") end)
+  frame.BiDOS = CreateActionButton(frame, "OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end") end)
   
   frame:Hide()
 
@@ -441,7 +450,10 @@ local function ShowFrame(frame,duration,item)
       times = 5
     end
   end)
-  itemRollFrame.EP:SetText("Your EP: " ..PlayerEP)
+  Ratio = PlayerEP/PlayerGP
+  itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+  itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+  itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   frame:Show()
 end
 
@@ -572,6 +584,8 @@ local function swapButtons()
     itemRollFrame.EPGPl1:Show()
     itemRollFrame.EPGPl2:Show()
     itemRollFrame.EP:Show()
+    itemRollFrame.GP:Show()
+    itemRollFrame.EPGPRatio:Show()
   elseif RaidEPGP == 0 then
     itemRollFrame.MSSR:Show()
     itemRollFrame.MS:Show()
@@ -583,6 +597,8 @@ local function swapButtons()
     itemRollFrame.EPGPl1:Hide()
     itemRollFrame.EPGPl2:Hide()
     itemRollFrame.EP:Hide()
+    itemRollFrame.GP:Hide()
+    itemRollFrame.EPGPRatio:Hide()
   end
 end
 
@@ -661,26 +677,19 @@ local function GetMasterLooterInParty()
   return nil
 end
 
-local function RollCheck(minRoll, maxRoll, message)
-  if RaidEPGP == 0 then
-          if maxRoll == tostring(MSSRRollCap) then
-            table.insert(MSSRRollMessages, message)
-          elseif maxRoll == tostring(MSRollCap) then
-            table.insert(MSRollMessages, message)
-          elseif maxRoll == tostring(OSSRRollCap) then
-            table.insert(OSSRRollMessages, message)
-          elseif maxRoll == tostring(OSRollCap) then
-            table.insert(OSRollMessages, message)
-          elseif maxRoll == tostring(tmogRollCap) then
-            table.insert(tmogRollMessages, message)
-          end
-        elseif RaidEPGP == 1 then
-          if minRoll == tostring(MSPrice) then
-            table.insert(EPGPMSRollMessages, message)
-          elseif minRoll == tostring(OSPrice) then
-            table.insert(EPGPOSRollMessages, message)
-          end
-        end
+local function RollCheck(maxRoll, message)
+  
+  if maxRoll == tostring(MSSRRollCap) then
+    table.insert(MSSRRollMessages, message)
+  elseif maxRoll == tostring(MSRollCap) then
+    table.insert(MSRollMessages, message)
+  elseif maxRoll == tostring(OSSRRollCap) then
+    table.insert(OSSRRollMessages, message)
+  elseif maxRoll == tostring(OSRollCap) then
+    table.insert(OSRollMessages, message)
+  elseif maxRoll == tostring(tmogRollCap) then
+    table.insert(tmogRollMessages, message)
+  end  
 end
 
 local function HandleChatMessage(event, message, sender)
@@ -720,7 +729,7 @@ local function HandleChatMessage(event, message, sender)
         roll = tonumber(roll)
         rollers[roller] = 1
         message = { rank = GetRankOfRoller(roller), rankI = GetRankOfRollerI(roller), roller = roller, roll = roll, minRoll = minRoll, maxRoll = maxRoll, msg = message, class = GetClassOfRoller(roller) }
-        RollCheck(minRoll, maxRoll, message)
+        RollCheck(maxRoll, message)
         UpdateTextArea(itemRollFrame)
       end
     end
@@ -749,8 +758,8 @@ local function HandleChatMessage(event, message, sender)
   elseif event == "ADDON_LOADED"then
     if FrameShownDuration == nil then FrameShownDuration = 15 end
     if FrameAutoClose == nil then FrameAutoClose = true end
-    if PlayerEP == nil then lb_print("Test")
-    PlayerEP = 0 end
+    if PlayerEP == nil then PlayerEP = 100 end
+    if PlayerGP == nil then PlayerGP = 100 end
     
     if IsSenderMasterLooter(UnitName("player")) then
       SendAddonMessage(LB_PREFIX, LB_SET_ML .. UnitName("player"), "RAID")
@@ -790,6 +799,29 @@ local function HandleChatMessage(event, message, sender)
         lb_print("Roll time set to " .. FrameShownDuration .. " seconds.")
       end
     end
+
+    if string.find(message, LB_BID) then
+      local msg
+      local _,_,player = string.find(message, "Player: (%S+)")
+      local _,_,type = string.find(message, "-(%u+)-")
+      local _,_,effort = string.find(message, "+(%d*%.?%d+)+")
+      local _,_,gear = string.find(message, "*(%d*%.?%d+)*")
+      local _,_,rat = string.find(message, "=(%d*%.?%d+)=")
+      msg = { rank = GetRankOfRoller(player), rankI = GetRankOfRollerI(player), roller = player, type = type, ep = tonumber(effort), gp = tonumber(gear), ratio = tonumber(rat), class = GetClassOfRoller(player) }
+    
+      --lb_print(message)
+      --lb_print(player.. " "..type.." "..effort.." "..gear.." "..rat)
+      if type == "MS" then
+        table.insert(EPGPMSRollMessages, msg)
+      elseif type == "OS" then
+        table.insert(EPGPOSRollMessages, msg)
+      end
+      UpdateTextArea(itemRollFrame)
+    end
+
+    if string.find(message, LB_AWARD) then
+      
+    end
   end
 end
 
@@ -822,7 +854,8 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     end
   elseif msg == "help" then
     lb_print("LootBlare is a simple addon that displays and sort item rolls in a frame.")
-    lb_print("Type /lb EP <your ep> to set your EP within the addon")
+    lb_print("Type /lb EP <your EP> to set your EP within the addon")
+    lb_print("Type /lb GP <your GP> to set your GP within the addon")
     lb_print("Type /lb check to print your current EP")
     lb_print("Type /lb time <seconds> to set the duration the frame is shown. This value will be automatically set by the master looter after the first rolls.")
     lb_print("Type /lb autoClose on/off to enable/disable auto closing the frame after the time has elapsed.")
@@ -855,16 +888,30 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       lb_print("Invalid option. Please enter 'on' or 'off'.")
     end
   elseif string.find(msg, "ep") then
-    local _,_,newEP = string.find(msg, "ep (%d+)")
+    local _,_,newEP = string.find(msg, "ep (%d*%.?%d+)")
     newEP = tonumber(newEP)
     if newEP == nil then
       newEP = PlayerEP
     end
     PlayerEP = newEP
+    Ratio = PlayerEP/PlayerGP
     lb_print("Your EP has been set to " ..PlayerEP)
-    itemRollFrame.EP:SetText("Your EP: " ..PlayerEP)
+    itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+  elseif string.find(msg, "gp") then
+    local _,_,newGP = string.find(msg, "gp (%d*%.?%d+)")
+    newGP = tonumber(newGP)
+    if newGP == nil then
+      newGP = PlayerGP
+    end
+    PlayerGP = newGP
+    lb_print("Your GP has been set to " ..PlayerGP)
+    Ratio = PlayerEP/PlayerGP
+    itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
+    lb_print("Your current GP is set to: " ..PlayerGP)
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end
