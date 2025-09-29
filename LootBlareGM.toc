@@ -7,3 +7,4 @@
 
 LootBlareGM.lua
 Database\Kara40.lua
+EPGPInterface.lua

@@ -259,13 +259,60 @@ local function CreateActionButton(frame, buttonText, tooltipText, index, onClick
   return button
 end
 
+local function CreateLMButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(20)
+  button:SetHeight(20)
+  button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -55)
+
+    -- Set button text
+  button:SetText("LM")
+  local font = button:GetFontString()
+  font:SetFont(FONT_NAME, FONT_SIZE, FONT_OUTLINE)
+
+  -- Add background 
+  local bg = button:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(button)
+  bg:SetTexture(1, 1, 1, 1) -- White texture
+  bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray background
+  
+  button:SetScript("OnMouseDown", function(self)
+      bg:SetVertexColor(0.6, 0.6, 0.6, 1) -- Even lighter gray when pressed
+  end)
+
+  button:SetScript("OnMouseUp", function(self)
+      bg:SetVertexColor(0.4, 0.4, 0.4, 1) -- Lighter gray on release
+  end)
+
+  -- Add tooltip
+  button:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Open Loot Master Panel", nil, nil, nil, nil, true)
+      bg:SetVertexColor(0.4, 0.4, 0.4, 1) -- Lighter gray on hover
+      GameTooltip:Show()
+  end)
+
+  button:SetScript("OnLeave", function(self)
+      bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray when not hovered
+      GameTooltip:Hide()
+  end)
+
+  --Add functionality to the button
+  button:SetScript("OnClick", function()
+    if LootMasterFrame:IsVisible() then
+      LootMasterFrame:Hide()
+    else
+      LootMasterFrame:Show()
+    end
+  end)
+  return button
+end
+
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
-  if IsAddOnLoaded("pfUI") then
-    frame:SetWidth(240) -- Adjust size as needed
-  else 
-    frame:SetWidth(270)
-  end
+  
+  frame:SetWidth(270)
+  
   frame:SetHeight(400)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
@@ -291,20 +338,22 @@ local function CreateItemRollFrame()
   local GP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   local EPGPRatio = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   EPGPl1:SetPoint("RIGHT", frame, "RIGHT", -35, 175)
-  EPGPl1:SetFont(EPGPl1:GetFont(), 13)
+  EPGPl1:SetFont(FONT_NAME, 13)
   EPGPl2:SetPoint("LEFT", EPGPl1, "BOTTOMLEFT", 0, -10)
-  EPGPl2:SetFont(EPGPl2:GetFont(), 10)
-  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
-  EP:SetFont(EP:GetFont(), 10)
-  EP:SetText("EP:")
-  GP:SetPoint("LEFT", EP, "BOTTOMLEFT", -2.5, -8)
-  GP:SetFont(EP:GetFont(), 10)
-  GP:SetText("GP:")
-  EPGPRatio:SetPoint("LEFT", EP, "TOPLEFT", -25, 8)
-  EPGPRatio:SetFont(EP:GetFont(), 10)
-  EPGPRatio:SetText("Priority:")
+  EPGPl2:SetFont(FONT_NAME, 10)
   EPGPl1:SetText("EPGP Prices")
   EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
+  EP:SetFont(FONT_NAME, 10)
+  EP:SetText("EP:")
+  GP:SetPoint("LEFT", EP, "BOTTOMLEFT", -2, -8)
+  GP:SetFont(FONT_NAME, 10)
+  GP:SetText("GP:")
+  EPGPRatio:SetPoint("LEFT", EP, "TOPLEFT", -25, 8)
+  EPGPRatio:SetFont(FONT_NAME, 10)
+  EPGPRatio:SetText("Priority:")
+  
+  
   frame.EPGPl1 = EPGPl1
   frame.EPGPl2 = EPGPl2
   frame.EP = EP
@@ -317,8 +366,10 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end") end)
-  frame.BiDOS = CreateActionButton(frame, "OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end") end)
+  frame.BidMS = CreateActionButton(frame, "MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BiDOS = CreateActionButton(frame, "OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  
+  frame.LM = CreateLMButton(frame)
   
   frame:Hide()
 
@@ -326,6 +377,7 @@ local function CreateItemRollFrame()
 end
 
 local itemRollFrame = CreateItemRollFrame()
+local LootMasterFrame = CreateLootMasterFrame()
 
 local function InitItemInfo(frame)
   -- Create the texture for the item icon
@@ -454,6 +506,11 @@ local function ShowFrame(frame,duration,item)
   itemRollFrame.EP:SetText("EP: " ..PlayerEP)
   itemRollFrame.GP:SetText("GP: " ..PlayerGP)
   itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+  if masterLooter == UnitName("player") then 
+    itemRollFrame.LM:Show()
+  else
+    itemRollFrame.LM:Hide()
+  end
   frame:Show()
 end
 
