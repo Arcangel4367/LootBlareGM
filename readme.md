@@ -1,4 +1,4 @@
-# Loot Blare 1.1.10  Golden Moon Edition
+# Loot Blare 1.1.12  Golden Moon Edition
 
 Loot Blare is a World of Warcraft addon originally designed **Turtle WoW**.
 
@@ -47,8 +47,15 @@ Every time the master looter changes, the new master looter announces the roll t
 - Widened roll tracker to compensate for additional information
 - Rolls are set to Golden Moon loot rules
 
-Changelog:
+### EPGP Integration Project:
+- **Phase 1**: Add zone detection and a mode switch to EPGP for Karazhan, uses rolls to communicate
+- **Current Phase**
+- **Phase 2**: Implement EPGP communication using backend instead of rolls, include Award button, GP increase and EP Increases
+- **Phase 3**: EPGP management system, including decay and penalty functions
+- **Phase 4**: Develop way to connect to external spreadsheet
 
+Changelog:
+- **1.1.12**: EPGP Integration Project Phase 1
 - **1.1.11**: Golden Moon addition, see Moonie specific additions
 - **1.1.10**: Prevent blare window from closing due to timeout for the Master Looter
 - **1.1.9**: Add communication using CHAT_MSG_ADDON events
@@ -65,6 +72,7 @@ Contributors:
 * [SeguisDumble](https://github.com/SeguisDumble)
 * [Weird Vibes](MarcelineVQ/LootBlare)
 * [Arcangel](Arcangel4367/LootBlare)
+
 
 
 
