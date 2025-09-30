@@ -1,5 +1,5 @@
 ## Interface: 11200
-## Title: LootBlare GM Edition 1.1.11
+## Title: LootBlare GM Edition 1.1.12
 ## Author: Ehawne, Sivent, Gulolio, Arcangel
 ## Version: 1.1.11
 ## Notes: Make loot rolls obvious
