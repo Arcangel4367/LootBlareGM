@@ -970,6 +970,12 @@ SlashCmdList["LOOTBLARE"] = function(msg)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
     lb_print("Your current GP is set to: " ..PlayerGP)
+  elseif string.find(msg, "testframe") then
+    if TestMLFrame:IsVisible() then
+      TestMLFrame:Hide()
+    else
+      TestMLFrame:Show()
+    end
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end

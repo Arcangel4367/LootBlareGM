@@ -1,0 +1,23 @@
+<!--
+XML file for advanced interface for LootBlareGM
+
+
+
+
+
+-->
+
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    <Frame name="TestMLFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="false" frameStrata="HIGH">
+        <Size>
+            <AbsDimension x="400" y="400">
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER">
+                <Offset>
+                    <AbsDimension x="-50" y="0">
+                </Offset>
+            </Anchor>
+        </Anchors>
+    </Frame>
