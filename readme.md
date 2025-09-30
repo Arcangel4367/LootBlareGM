@@ -49,8 +49,10 @@ Every time the master looter changes, the new master looter announces the roll t
 
 ### EPGP Integration Project:
 - **Phase 1**: Add zone detection and a mode switch to EPGP for Karazhan, uses rolls to communicate
-- **Current Phase**
+
+  **Current Phase in development**
 - **Phase 2**: Implement EPGP communication using backend instead of rolls, include Award button, GP increase and EP Increases
+
 - **Phase 3**: EPGP management system, including decay and penalty functions
 - **Phase 4**: Develop way to connect to external spreadsheet
 
@@ -72,6 +74,7 @@ Contributors:
 * [SeguisDumble](https://github.com/SeguisDumble)
 * [Weird Vibes](MarcelineVQ/LootBlare)
 * [Arcangel](Arcangel4367/LootBlare)
+
 
 
 
