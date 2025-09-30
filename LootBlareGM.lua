@@ -34,9 +34,9 @@ local Ratio = 0
 local BUTTON_WIDTH = 32
 local BUTTON_COUNT = 5
 local BUTTON_PADING = 10
-local FONT_NAME = "Fonts\\FRIZQT__.TTF"
-local FONT_SIZE = 10
-local FONT_OUTLINE = "OUTLINE"
+FONT_NAME = "Fonts\\FRIZQT__.TTF"
+FONT_SIZE = 10
+FONT_OUTLINE = "OUTLINE"
 local RAID_CLASS_COLORS = {
   ["Warrior"] = "FFC79C6E",
   ["Mage"]    = "FF69CCF0",
@@ -175,6 +175,28 @@ local function tsize(t)
   if c > 0 then return c else return nil end
 end
 
+local function GetRankOfRollerI(rollerName)
+  -- Iterate through the raid roster
+  for i = 1, GetNumGuildMembers() do
+      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
+      if name == rollerName then
+          return rankIndex-- Return the rank as a string (e.g., Core, Raider, Member)
+      end
+    end
+    return 13 -- Return nil if the player is not found in the raid
+end
+
+local function GetRankOfRoller(rollerName)
+  -- Iterate through the raid roster
+  for i = 1, GetNumGuildMembers() do
+      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
+      if name == rollerName then
+          return rankName -- Return the rank as a string (e.g., Core, Raider, Member)
+      end
+    end
+    return "Non-Guildie" -- Return nil if the player is not found in the raid
+end
+
 local function CheckItem(link)
   discover:SetOwner(UIParent, "ANCHOR_PRESERVE")
   discover:SetHyperlink(link)
@@ -192,7 +214,7 @@ local function CheckItem(link)
   return false
 end
 
-local function CreateCloseButton(frame)
+function CreateCloseButton(frame)
   -- Add a close button
   local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
   closeButton:SetWidth(32) -- Button size
@@ -296,15 +318,7 @@ local function CreateLMButton(frame)
       bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray when not hovered
       GameTooltip:Hide()
   end)
-
-  --Add functionality to the button
-  button:SetScript("OnClick", function()
-    if LootMasterFrame:IsVisible() then
-      LootMasterFrame:Hide()
-    else
-      LootMasterFrame:Show()
-    end
-  end)
+  button:Hide()
   return button
 end
 
@@ -506,7 +520,10 @@ local function ShowFrame(frame,duration,item)
   itemRollFrame.EP:SetText("EP: " ..PlayerEP)
   itemRollFrame.GP:SetText("GP: " ..PlayerGP)
   itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
-  if masterLooter == UnitName("player") then 
+  if masterLooter == UnitName("player") and RaidEPGP == 1 then 
+    itemRollFrame.LM:Show()
+    LootMasterFrame:Show()
+  elseif GetRankOfRollerI(UnitName("player")) <= 2 and RaidEPGP == 1 then
     itemRollFrame.LM:Show()
   else
     itemRollFrame.LM:Hide()
@@ -540,27 +557,7 @@ local function GetClassOfRoller(rollerName)
   return nil -- Return nil if the player is not found in the raid
 end
 
-local function GetRankOfRoller(rollerName)
-  -- Iterate through the raid roster
-  for i = 1, GetNumGuildMembers() do
-      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
-      if name == rollerName then
-          return rankName -- Return the rank as a string (e.g., Core, Raider, Member)
-      end
-    end
-    return "Non-Guildie" -- Return nil if the player is not found in the raid
-end
 
-local function GetRankOfRollerI(rollerName)
-  -- Iterate through the raid roster
-  for i = 1, GetNumGuildMembers() do
-      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
-      if name == rollerName then
-          return rankIndex-- Return the rank as a string (e.g., Core, Raider, Member)
-      end
-    end
-    return 13 -- Return nil if the player is not found in the raid
-end
 
 local function UpdateTextArea(frame)
   if not frame.textArea then
@@ -908,6 +905,10 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       itemRollFrame:Hide()
     else
       itemRollFrame:Show()
+      if masterLooter == UnitName("player") or GetRankOfRollerI(UnitName("player")) <= 2 then 
+        itemRollFrame.LM:Show()
+        LootMasterFrame:Show()
+      end
     end
   elseif msg == "help" then
     lb_print("LootBlare is a simple addon that displays and sort item rolls in a frame.")

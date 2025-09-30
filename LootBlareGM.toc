@@ -3,8 +3,9 @@
 ## Author: Ehawne, Sivent, Gulolio, Arcangel
 ## Version: 1.1.11
 ## Notes: Make loot rolls obvious
-## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP, PlayerGP
+## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP, PlayerGP, GuildEPGP
 
-LootBlareGM.lua
 Database\Kara40.lua
+Database\GoldenMoonStarter.lua
 EPGPInterface.lua
+LootBlareGM.lua
