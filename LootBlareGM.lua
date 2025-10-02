@@ -318,6 +318,14 @@ local function CreateLMButton(frame)
       bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray when not hovered
       GameTooltip:Hide()
   end)
+
+  button:SetScript("OnClick", function()
+    if LootMasterFrame:IsVisible() then
+      LootMasterFrame:Hide()
+    else
+      LootMasterFrame:Show()
+    end
+  end)
   button:Hide()
   return button
 end
@@ -391,7 +399,6 @@ local function CreateItemRollFrame()
 end
 
 local itemRollFrame = CreateItemRollFrame()
-local LootMasterFrame = CreateLootMasterFrame()
 
 local function InitItemInfo(frame)
   -- Create the texture for the item icon
@@ -557,7 +564,15 @@ local function GetClassOfRoller(rollerName)
   return nil -- Return nil if the player is not found in the raid
 end
 
-
+local function updateAwardee()
+  if next(EPGPMSRollMessages) then
+    Awardee:SetText(EPGPMSRollMessages[1].roller)
+  elseif next(EPGPOSRollMessages) then
+    Awardee:SetText(EPGPOSRollMessages[1].roller)
+  else
+    Awardee:SetText("None")
+  end
+end
 
 local function UpdateTextArea(frame)
   if not frame.textArea then
@@ -613,7 +628,7 @@ local function UpdateTextArea(frame)
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
-
+  updateAwardee()
   frame.textArea:SetText(text)
 end
 
@@ -717,18 +732,14 @@ local function IsSenderMasterLooter(sender)
   return false
 end
 
-local function GetMasterLooterInParty()
-  local lootMethod, masterLooterPartyID = GetLootMethod()
-  if lootMethod == "master" and masterLooterPartyID then
-    if masterLooterPartyID == 0 then
-      return UnitName("player")
-    else
-      local senderUID = "party" .. masterLooterPartyID
-      local masterLooterName = UnitName(senderUID)
-      return masterLooterName
-    end
-  end
-  return nil
+function LM_OnLoad()
+  LootMasterFrame:RegisterForDrag("LeftButton")
+end
+
+function LM_StartMoving()
+	
+	LootMasterFrame:StartMoving();
+	
 end
 
 local function RollCheck(maxRoll, message)
@@ -822,6 +833,7 @@ local function HandleChatMessage(event, message, sender)
     else
       SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID")
     end
+
   elseif event == "PARTY_MEMBERS_CHANGED"then
     RequestML()
   elseif event == "RAID_ROSTER_UPDATE"then
@@ -853,7 +865,7 @@ local function HandleChatMessage(event, message, sender)
         lb_print("Roll time set to " .. FrameShownDuration .. " seconds.")
       end
     end
-
+    --EPGP Communication--
     if string.find(message, LB_BID) then
       local msg
       local _,_,player = string.find(message, "Player: (%S+)")
@@ -865,12 +877,16 @@ local function HandleChatMessage(event, message, sender)
     
       --lb_print(message)
       --lb_print(player.. " "..type.." "..effort.." "..gear.." "..rat)
-      if type == "MS" then
-        table.insert(EPGPMSRollMessages, msg)
-      elseif type == "OS" then
-        table.insert(EPGPOSRollMessages, msg)
+      if rollers[player] == nil then
+        rollers[player] = 1
+        if type == "MS" then
+          table.insert(EPGPMSRollMessages, msg)
+        elseif type == "OS" then
+          table.insert(EPGPOSRollMessages, msg)
+        end
+        UpdateTextArea(itemRollFrame)
       end
-      UpdateTextArea(itemRollFrame)
+      
     end
 
     if string.find(message, LB_AWARD) then
@@ -892,6 +908,7 @@ itemRollFrame:RegisterEvent("PARTY_LOOT_METHOD_CHANGED")
 itemRollFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 itemRollFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 itemRollFrame:SetScript("OnEvent", function () HandleChatMessage(event,arg1,arg2) end)
+
 
 -- Register the slash command
 SLASH_LOOTBLARE1 = '/lootblare'
@@ -970,12 +987,6 @@ SlashCmdList["LOOTBLARE"] = function(msg)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
     lb_print("Your current GP is set to: " ..PlayerGP)
-  elseif string.find(msg, "testframe") then
-    if TestMLFrame:IsVisible() then
-      TestMLFrame:Hide()
-    else
-      TestMLFrame:Show()
-    end
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end

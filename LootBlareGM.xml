@@ -8,17 +8,118 @@ XML file for advanced interface for LootBlareGM
 -->
 
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
-..\FrameXML\UI.xsd">
-    <Frame name="TestMLFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="false" frameStrata="HIGH">
+C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+    <Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
         <Size>
-            <AbsDimension x="400" y="400">
+            <AbsDimension x="400" y="400" />
         </Size>
         <Anchors>
             <Anchor point="CENTER">
                 <Offset>
-                    <AbsDimension x="-50" y="0">
+                    <AbsDimension x="-50" y="0" />
                 </Offset>
             </Anchor>
         </Anchors>
+        <Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+            <BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+            <BorderColor r="0.6" g="0.6" b="0.6"/>
+            <Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+        </Backdrop>
+        <Scripts>
+            <OnLoad>
+                LM_OnLoad();
+            </OnLoad>
+            <OnHide>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnHide>
+			<OnDragStart>
+				if(arg1 == "LeftButton") then
+					LM_StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnDragStop>
+			<OnMouseUp>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnMouseUp>
+        </Scripts>
+        <Frames>
+            <Button name="LootMasterFrameCloseButton" inherits="UIPanelCloseButton" >
+			    <Anchors>
+				    <Anchor point="TOPRIGHT" relativeTo="LootMasterFrame" relativePoint="TOPRIGHT">
+					    <Offset>
+				    	    <AbsDimension x="-5" y="-7"/>
+					    </Offset>
+				    </Anchor>
+			    </Anchors>
+		    </Button>
+            <Button name="AwardButton" inherits="UIPanelButtonTemplate2" text="Award" >
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="10" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+                    
+				</Scripts>
+		    </Button>
+            <Frame name="AwardeeFrame" text="Test">
+                <Size>
+                    <AbsDimension x="80" y="32"/>
+                </Size>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <!-- This is the element where your text will be displayed. -->
+                        <FontString name="Awardee" inherits="GameFontNormalSmall">
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="AwardButton" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="-5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+            <Button name="OverideFrameDropDownType" inherits="UIDropDownMenuTemplate">
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentLabel" inherits="GameFontNormalSmall" text="Overide Award">
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+									<Offset>
+										<AbsDimension x="21" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-120" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+        </Frames>
+        
+        
     </Frame>
 </Ui>
