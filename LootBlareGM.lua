@@ -85,10 +85,10 @@ end
 
 local function sortRolls()
   table.sort(EPGPMSRollMessages, function(a, b)
-    return a.maxRoll < b.maxRoll
+    return a.maxRoll > b.maxRoll
   end)
   table.sort(EPGPOSRollMessages, function(a, b)
-    return a.maxRoll < b.maxRoll
+    return a.maxRoll > b.maxRoll
   end)
   table.sort(MSSRRollMessages, function(a, b)
     return a.roll > b.roll
@@ -295,7 +295,7 @@ local function CreateItemRollFrame()
   EPGPl2:SetFont(EPGPl2:GetFont(), 10)
   EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 110, 26)
   EP:SetFont(EP:GetFont(), 14)
-  EP:SetText("Your EP:")
+  EP:SetText("Your Priority:")
   EPGPl1:SetText("EPGP Prices")
   EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r  |c"..OS_TEXT_COLOR.."OS: 0|r")
   frame.EPGPl1 = EPGPl1
@@ -441,7 +441,7 @@ local function ShowFrame(frame,duration,item)
       times = 5
     end
   end)
-  itemRollFrame.EP:SetText("Your EP: " ..PlayerEP)
+  itemRollFrame.EP:SetText("Your Priority: " ..PlayerEP)
   frame:Show()
 end
 
@@ -822,7 +822,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     end
   elseif msg == "help" then
     lb_print("LootBlare is a simple addon that displays and sort item rolls in a frame.")
-    lb_print("Type /lb EP <your ep> to set your EP within the addon")
+    lb_print("Type /lb EP <your ep> to set your priority within the addon")
     lb_print("Type /lb check to print your current EP")
     lb_print("Type /lb time <seconds> to set the duration the frame is shown. This value will be automatically set by the master looter after the first rolls.")
     lb_print("Type /lb autoClose on/off to enable/disable auto closing the frame after the time has elapsed.")
@@ -861,8 +861,8 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       newEP = PlayerEP
     end
     PlayerEP = newEP
-    lb_print("Your EP has been set to " ..PlayerEP)
-    itemRollFrame.EP:SetText("Your EP: " ..PlayerEP)
+    lb_print("Your priority has been set to " ..PlayerEP)
+    itemRollFrame.EP:SetText("Your Priority: " ..PlayerEP)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
   else
