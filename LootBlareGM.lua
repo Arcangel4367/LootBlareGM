@@ -214,6 +214,27 @@ local function CheckItem(link)
   return false
 end
 
+function Override_InitializeDropdown()
+  local info
+  
+  for v = 0, getn(rollers), 1 do
+    info = {
+      text = rollers[v],
+      func = OverrideFrameDropDown_OnClick
+    }
+    UIDropDownMenu_AddButton(info)
+  end
+end
+
+function OverrideFrameDropDown_OnClick()
+
+end
+
+function OverrideFrameDropDownType_OnShow()
+  UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
+  UIDropDownMenu_SetWidth(80, OverideFrameDropDownType);
+end
+
 function CreateCloseButton(frame)
   -- Add a close button
   local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
@@ -629,6 +650,7 @@ local function UpdateTextArea(frame)
     count = count + 1
   end
   updateAwardee()
+  OverrideFrameDropDownType_OnShow()
   frame.textArea:SetText(text)
 end
 

@@ -113,7 +113,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
 						<Offset>
-							<AbsDimension x="-120" y="10"/>
+							<AbsDimension x="0" y="10"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
