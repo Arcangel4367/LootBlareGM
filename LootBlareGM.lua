@@ -861,8 +861,8 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       newEP = PlayerEP
     end
     PlayerEP = newEP
-    lb_print("Your EP has been set to " ..PlayerEP)
-    itemRollFrame.EP:SetText("Your EP: " ..PlayerEP)
+    lb_print("Your priority has been set to " ..PlayerEP)
+    itemRollFrame.EP:SetText("Your Priority: " ..PlayerEP)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
   else
