@@ -616,7 +616,7 @@ local function ZoneCheck()
       swapButtons()
       lb_print("EPGP functions|cFF00FF00 enabled|r")
     end
-  elseif K40 == 1 and zone == "Rock of Desolation" then
+  elseif K40 == 1 and zone == "The Rock of Desolation" then
     if RaidEPGP ~= 1 then
       RaidEPGP = 1
       PriceDB = Kara40
