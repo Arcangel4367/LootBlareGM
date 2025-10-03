@@ -402,7 +402,7 @@ local function SetItemInfo(frame, itemLinkArg)
     return true
   end
   if RaidEPGP == 1 then
-    local idMatch = string.match(itemLink, "item:(%d+):")
+    local _,_,idMatch = string.find(itemLink, "item:(%d+):")
     if idMatch then
       local itemID = tonumber(idMatch)
       PullPrices(itemID)
