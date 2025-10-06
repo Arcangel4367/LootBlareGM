@@ -1027,7 +1027,10 @@ local function HandleChatMessage(event, message, sender)
       local _,_,price = string.find(message, "+(%d*%.?%d+)+")
       if player == UnitName("player") then
         PlayerGP = PlayerGP + tonumber(price)
+        Ratio = PlayerEP/PlayerGP
         itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+        itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        
       end
     end
   end
