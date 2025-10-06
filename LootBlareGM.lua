@@ -25,7 +25,7 @@ local tmogRollCap = 50
 PriceDB = nil
 local CurrentSelection
 local RaidEPGP = 0
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
