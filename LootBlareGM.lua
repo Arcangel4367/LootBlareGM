@@ -23,6 +23,7 @@ local tmogRollCap = 50
 
 --EPGP Settings--
 PriceDB = nil
+local CurrentSelection
 local RaidEPGP = 0
 local TestZone = 1
 local Naxx = 0
@@ -30,6 +31,7 @@ local K40 = 1
 local MSPrice = 0
 local OSPrice = 0
 local Ratio = 0
+local AwardSent = 0
 
 local BUTTON_WIDTH = 32
 local BUTTON_COUNT = 5
@@ -72,6 +74,9 @@ local LB_AWARD = "Awarded to: "
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
 end
+
+NUM_DISPLAY_ROWS = 12
+ROW_HEIGHT = 20
 
 local function resetRolls()
   MSSRRollMessages = {}
@@ -217,22 +222,48 @@ end
 function Override_InitializeDropdown()
   local info
   
-  for v = 0, getn(rollers), 1 do
+
+  for i, v in ipairs(EPGPMSRollMessages) do
+    local info = UIDropDownMenu_CreateInfo()
     info = {
-      text = rollers[v],
-      func = OverrideFrameDropDown_OnClick
+      text = EPGPMSRollMessages[i].roller,
+      value = i;
+      player = EPGPMSRollMessages[i].roller,
+      type = EPGPMSRollMessages[i].type,
+      func = function(self)
+        Awardee:SetText(info.type .. " " .. info.player)
+        CurrentSelection = {
+          player = info.player,
+          type = info.type,
+          price = MSPrice
+        }
+      end
+    }
+    UIDropDownMenu_AddButton(info)
+  end
+  for i, v in ipairs(EPGPOSRollMessages) do
+    local info = UIDropDownMenu_CreateInfo()
+    info = {
+      text = EPGPOSRollMessages[i].roller,
+      value = i;
+      player = EPGPOSRollMessages[i].roller,
+      type = EPGPOSRollMessages[i].type,
+      func = function(self)
+        Awardee:SetText(info.type .. " " .. info.player)
+        CurrentSelection = {
+          player = info.player,
+          type = info.type,
+          price = OSPrice
+        }
+      end
     }
     UIDropDownMenu_AddButton(info)
   end
 end
 
-function OverrideFrameDropDown_OnClick()
-
-end
-
 function OverrideFrameDropDownType_OnShow()
   UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
-  UIDropDownMenu_SetWidth(80, OverideFrameDropDownType);
+  UIDropDownMenu_SetWidth(120, OverideFrameDropDownType);
 end
 
 function CreateCloseButton(frame)
@@ -587,11 +618,30 @@ end
 
 local function updateAwardee()
   if next(EPGPMSRollMessages) then
-    Awardee:SetText(EPGPMSRollMessages[1].roller)
+    Awardee:SetText(EPGPMSRollMessages[1].type .. " " ..EPGPMSRollMessages[1].roller)
+    CurrentSelection = {
+          player = EPGPMSRollMessages[1].roller,
+          type = EPGPMSRollMessages[1].type,
+          price = MSPrice
+        }
   elseif next(EPGPOSRollMessages) then
-    Awardee:SetText(EPGPOSRollMessages[1].roller)
+    Awardee:SetText(EPGPOSRollMessages[1].type .. " " ..EPGPOSRollMessages[1].roller)
+    CurrentSelection = {
+          player = EPGPOSRollMessages[1].roller,
+          type = EPGPOSRollMessages[1].type,
+          price = OSPrice
+        }
   else
     Awardee:SetText("None")
+  end
+end
+
+function SendAward()
+  
+  if AwardSent ~= 1 then
+    AwardSent = 1
+    lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    SendAddonMessage(LB_PREFIX, LB_AWARD .. "-" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
   end
 end
 
@@ -603,47 +653,54 @@ local function UpdateTextArea(frame)
   -- frame.textArea:SetTeClear()  -- Clear the existing messages
   local text = ""
   local colored_msg = ""
-  local count = 0
+  
 
   sortRolls()
 
   for i, v in ipairs(EPGPMSRollMessages) do
+    local count = 0
     if count >= 15 then break end
     colored_msg = v.msg
     text = text .. colorEPGPMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(EPGPOSRollMessages) do
+    local count = 0
     if count >= 15 then break end
     colored_msg = v.msg
     text = text .. colorEPGPMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(MSSRRollMessages) do
+    local count = 0
     if count >= 8 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(MSRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(OSSRRollMessages) do
+    local count = 0
     if count >= 8 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(OSRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(tmogRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
@@ -652,6 +709,36 @@ local function UpdateTextArea(frame)
   updateAwardee()
   OverrideFrameDropDownType_OnShow()
   frame.textArea:SetText(text)
+end
+
+function UpdateLMScrollFrame()
+  FauxScrollFrame_Update(LootMasterScrollFrame, 50, NUM_DISPLAY_ROWS, ROW_HEIGHT)
+  local offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+  for i = 1, NUM_DISPLAY_ROWS do
+    local rowIndex = offset + i;
+    local rowFrame = _G["LMScrollFrame" .. i];
+    if rowFrame then
+      if EPGPMSRollMessages[rowIndex] then
+        rowFrame:Show()
+        _G[rowFrame:GetName() .. "Column1"]:SetText(EPGPMSRollMessages[rowIndex].roller);
+        _G[rowFrame:GetName() .. "Column2"]:SetText(EPGPMSRollMessages[rowIndex].type);
+        _G[rowFrame:GetName() .. "Column3"]:SetText(EPGPMSRollMessages[rowIndex].ep);
+        _G[rowFrame:GetName() .. "Column4"]:SetText(EPGPMSRollMessages[rowIndex].gp);
+        _G[rowFrame:GetName() .. "Column5"]:SetText(EPGPMSRollMessages[rowIndex].ratio);
+        -- Set text for Column3, Column4, Column5
+      elseif EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)] then
+        rowFrame:Show()
+        _G[rowFrame:GetName() .. "Column1"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].roller);
+        _G[rowFrame:GetName() .. "Column2"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].type);
+        _G[rowFrame:GetName() .. "Column3"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].ep);
+        _G[rowFrame:GetName() .. "Column4"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].gp);
+        _G[rowFrame:GetName() .. "Column5"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].ratio);
+        -- Set text for Column3, Column4, Column5
+       else
+        rowFrame:Hide();
+      end
+    end
+  end
 end
 
 local function ExtractItemLinksFromMessage(message)
@@ -716,7 +803,7 @@ local function ZoneCheck()
       swapButtons()
       lb_print("EPGP functions|cFF00FF00 enabled|r")
     end
-  elseif K40 == 1 and zone == "Tower of Karazhan"  then
+  elseif K40 == 1 and zone == "Tower of Karazhan" and GetNumRaidMembers() > 15 then
     if RaidEPGP ~= 1 then
       RaidEPGP = 1
       PriceDB = Kara40
@@ -756,6 +843,24 @@ end
 
 function LM_OnLoad()
   LootMasterFrame:RegisterForDrag("LeftButton")
+
+  for i = 1, NUM_DISPLAY_ROWS do
+    local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
+    if i == 1 then
+      rowFrame:SetPoint("TOPLEFT", LootMasterScrollFrame, "TOPLEFT", 2, -5);
+    else
+      rowFrame:SetPoint("TOPLEFT", _G["LMScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
+    end
+    --rowFrame:Hide()
+  end
+end
+
+function kiddos ()
+    DEFAULT_CHAT_FRAME:AddMessage(GetMouseFocus():GetName())
+    local kiddos = { GetMouseFocus():GetRegions() };
+    for _, child in ipairs(kiddos) do
+        DEFAULT_CHAT_FRAME:AddMessage(child:GetName());
+    end
 end
 
 function LM_StartMoving()
@@ -831,8 +936,10 @@ local function HandleChatMessage(event, message, sender)
         string.find(message, " received ") then
         return
       end
+      AwardSent = 0
       resetRolls()
       UpdateTextArea(itemRollFrame)
+      UpdateLMScrollFrame()
       time_elapsed = 0
       isRolling = true
       ShowFrame(itemRollFrame,FrameShownDuration,links[1])
@@ -858,8 +965,10 @@ local function HandleChatMessage(event, message, sender)
 
   elseif event == "PARTY_MEMBERS_CHANGED"then
     RequestML()
+    ZoneCheck()
   elseif event == "RAID_ROSTER_UPDATE"then
     RequestML()
+    ZoneCheck()
   elseif event == "CHAT_MSG_ADDON" and arg1 == LB_PREFIX then
     local prefix, message, channel, sender = arg1, arg2, arg3, arg4
 
@@ -907,12 +1016,19 @@ local function HandleChatMessage(event, message, sender)
           table.insert(EPGPOSRollMessages, msg)
         end
         UpdateTextArea(itemRollFrame)
+        UpdateLMScrollFrame()
       end
       
     end
 
     if string.find(message, LB_AWARD) then
-      
+      local msg
+      local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,price = string.find(message, "+(%d*%.?%d+)+")
+      if player == UnitName("player") then
+        PlayerGP = PlayerGP + tonumber(price)
+        itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+      end
     end
   end
 end
@@ -1009,6 +1125,8 @@ SlashCmdList["LOOTBLARE"] = function(msg)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
     lb_print("Your current GP is set to: " ..PlayerGP)
+  elseif string.find(msg, "kiddos") then
+    kiddos()
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end
