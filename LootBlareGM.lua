@@ -576,6 +576,7 @@ local function ShowFrame(frame,duration,item)
     end
   end)
   Ratio = PlayerEP/PlayerGP
+  Ratio = string.format("%.2f", Ratio)
   itemRollFrame.EP:SetText("EP: " ..PlayerEP)
   itemRollFrame.GP:SetText("GP: " ..PlayerGP)
   itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
@@ -734,8 +735,19 @@ function UpdateLMScrollFrame()
         _G[rowFrame:GetName() .. "Column4"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].gp);
         _G[rowFrame:GetName() .. "Column5"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].ratio);
         -- Set text for Column3, Column4, Column5
-       else
+      else
         rowFrame:Hide();
+      end
+      if getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages) >= NUM_DISPLAY_ROWS then
+        LootMasterScrollFrame:SetScript("OnMouseWheel", UpdateLMScrollFrame())
+        LootMasterScrollFrameScrollBar:Show()
+        LootMasterScrollFrameScrollBarScrollUpButton:Show()
+        LootMasterScrollFrameScrollBarScrollDownButton:Show()
+      else
+        LootMasterScrollFrame:SetScript("OnMouseWheel", function() end)
+        LootMasterScrollFrameScrollBar:Hide()
+        LootMasterScrollFrameScrollBarScrollUpButton:Hide()
+        LootMasterScrollFrameScrollBarScrollDownButton:Hide()
       end
     end
   end
@@ -1028,6 +1040,7 @@ local function HandleChatMessage(event, message, sender)
       if player == UnitName("player") then
         PlayerGP = PlayerGP + tonumber(price)
         Ratio = PlayerEP/PlayerGP
+        Ratio = string.format("%.2f", Ratio)
         itemRollFrame.GP:SetText("GP: " ..PlayerGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         
@@ -1111,6 +1124,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     end
     PlayerEP = newEP
     Ratio = PlayerEP/PlayerGP
+    Ratio = string.format("%.2f", Ratio)
     lb_print("Your EP has been set to " ..PlayerEP)
     itemRollFrame.EP:SetText("EP: " ..PlayerEP)
     itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
@@ -1123,11 +1137,13 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     PlayerGP = newGP
     lb_print("Your GP has been set to " ..PlayerGP)
     Ratio = PlayerEP/PlayerGP
+    Ratio = string.format("%.2f", Ratio)
     itemRollFrame.GP:SetText("GP: " ..PlayerGP)
     itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
     lb_print("Your current GP is set to: " ..PlayerGP)
+    lb_print("Your current priority is: " ..Ratio)
   elseif string.find(msg, "kiddos") then
     kiddos()
   else
