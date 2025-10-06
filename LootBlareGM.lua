@@ -23,19 +23,22 @@ local tmogRollCap = 50
 
 --EPGP Settings--
 PriceDB = nil
+local CurrentSelection
 local RaidEPGP = 0
 local TestZone = 0
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
 local OSPrice = 0
+local Ratio = 0
+local AwardSent = 0
 
 local BUTTON_WIDTH = 32
 local BUTTON_COUNT = 5
 local BUTTON_PADING = 10
-local FONT_NAME = "Fonts\\FRIZQT__.TTF"
-local FONT_SIZE = 10
-local FONT_OUTLINE = "OUTLINE"
+FONT_NAME = "Fonts\\FRIZQT__.TTF"
+FONT_SIZE = 10
+FONT_OUTLINE = "OUTLINE"
 local RAID_CLASS_COLORS = {
   ["Warrior"] = "FFC79C6E",
   ["Mage"]    = "FF69CCF0",
@@ -65,10 +68,15 @@ local LB_PREFIX = "LootBlare"
 local LB_GET_DATA = "get data"
 local LB_SET_ML = "ML set to "
 local LB_SET_ROLL_TIME = "Roll time set to "
+local LB_BID = "Bid on item: "
+local LB_AWARD = "Awarded to: "
 
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
 end
+
+NUM_DISPLAY_ROWS = 12
+ROW_HEIGHT = 20
 
 local function resetRolls()
   MSSRRollMessages = {}
@@ -85,10 +93,10 @@ end
 
 local function sortRolls()
   table.sort(EPGPMSRollMessages, function(a, b)
-    return a.maxRoll > b.maxRoll
+    return a.ratio > b.ratio
   end)
   table.sort(EPGPOSRollMessages, function(a, b)
-    return a.maxRoll > b.maxRoll
+    return a.ratio > b.ratio
   end)
   table.sort(MSSRRollMessages, function(a, b)
     return a.roll > b.roll
@@ -141,19 +149,15 @@ local function colorMsg(message)
 end
 
 local function colorEPGPMsg(message)
-  local msg = message.msg
   local class = message.class
-  _,_,_, message_end = string.find(msg, "(%S+)%s+(.+)")
   local classColor = RAID_CLASS_COLORS[class]
   local textColor = DEFAULT_TEXT_COLOR
   local rankColor = DEFAULT_TEXT_COLOR
 
-  if string.find(msg,MSPrice.. "-") then
+  if message.type == "MS" then
     textColor = MS_Text_Color
-    message.type = "MS"
-  elseif string.find(msg,OSPrice.. "-") then
+  elseif message.type == "OS" then
     textColor = OS_TEXT_COLOR
-    message.type = "OS"
   end
   if message.rankI <= 4 then
     rankColor = CORE_TEXT_COLOR
@@ -164,7 +168,7 @@ local function colorEPGPMsg(message)
   elseif  message.rankI >= 7 then
     rankColor = MEMPUG_TEXT_COLOR
   end
-  local colored_msg = "|c".. rankColor .. ""  .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message.type .. " " .. message.maxRoll .. "|r"
+  local colored_msg = "|c".. rankColor .. message.rank .. " |c" .. classColor .. message.roller .. "|r |c" .. textColor .. message.type .. "|r |cFF0070DE".. message.ratio .. "|r"
   return colored_msg
 end
 
@@ -174,6 +178,28 @@ local function tsize(t)
     c = c + 1
   end
   if c > 0 then return c else return nil end
+end
+
+local function GetRankOfRollerI(rollerName)
+  -- Iterate through the raid roster
+  for i = 1, GetNumGuildMembers() do
+      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
+      if name == rollerName then
+          return rankIndex-- Return the rank as a string (e.g., Core, Raider, Member)
+      end
+    end
+    return 13 -- Return nil if the player is not found in the raid
+end
+
+local function GetRankOfRoller(rollerName)
+  -- Iterate through the raid roster
+  for i = 1, GetNumGuildMembers() do
+      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
+      if name == rollerName then
+          return rankName -- Return the rank as a string (e.g., Core, Raider, Member)
+      end
+    end
+    return "Non-Guildie" -- Return nil if the player is not found in the raid
 end
 
 local function CheckItem(link)
@@ -193,7 +219,54 @@ local function CheckItem(link)
   return false
 end
 
-local function CreateCloseButton(frame)
+function Override_InitializeDropdown()
+  local info
+  
+
+  for i, v in ipairs(EPGPMSRollMessages) do
+    local info = UIDropDownMenu_CreateInfo()
+    info = {
+      text = EPGPMSRollMessages[i].roller,
+      value = i;
+      player = EPGPMSRollMessages[i].roller,
+      type = EPGPMSRollMessages[i].type,
+      func = function(self)
+        Awardee:SetText(info.type .. " " .. info.player)
+        CurrentSelection = {
+          player = info.player,
+          type = info.type,
+          price = MSPrice
+        }
+      end
+    }
+    UIDropDownMenu_AddButton(info)
+  end
+  for i, v in ipairs(EPGPOSRollMessages) do
+    local info = UIDropDownMenu_CreateInfo()
+    info = {
+      text = EPGPOSRollMessages[i].roller,
+      value = i;
+      player = EPGPOSRollMessages[i].roller,
+      type = EPGPOSRollMessages[i].type,
+      func = function(self)
+        Awardee:SetText(info.type .. " " .. info.player)
+        CurrentSelection = {
+          player = info.player,
+          type = info.type,
+          price = OSPrice
+        }
+      end
+    }
+    UIDropDownMenu_AddButton(info)
+  end
+end
+
+function OverrideFrameDropDownType_OnShow()
+  UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
+  UIDropDownMenu_SetWidth(120, OverideFrameDropDownType);
+end
+
+function CreateCloseButton(frame)
   -- Add a close button
   local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
   closeButton:SetWidth(32) -- Button size
@@ -230,7 +303,7 @@ local function CreateActionButton(frame, buttonText, tooltipText, index, onClick
   bg:SetAllPoints(button)
   bg:SetTexture(1, 1, 1, 1) -- White texture
   bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray background
-
+  
   button:SetScript("OnMouseDown", function(self)
       bg:SetVertexColor(0.6, 0.6, 0.6, 1) -- Even lighter gray when pressed
   end)
@@ -260,13 +333,60 @@ local function CreateActionButton(frame, buttonText, tooltipText, index, onClick
   return button
 end
 
+local function CreateLMButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(20)
+  button:SetHeight(20)
+  button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -55)
+
+    -- Set button text
+  button:SetText("LM")
+  local font = button:GetFontString()
+  font:SetFont(FONT_NAME, FONT_SIZE, FONT_OUTLINE)
+
+  -- Add background 
+  local bg = button:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(button)
+  bg:SetTexture(1, 1, 1, 1) -- White texture
+  bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray background
+  
+  button:SetScript("OnMouseDown", function(self)
+      bg:SetVertexColor(0.6, 0.6, 0.6, 1) -- Even lighter gray when pressed
+  end)
+
+  button:SetScript("OnMouseUp", function(self)
+      bg:SetVertexColor(0.4, 0.4, 0.4, 1) -- Lighter gray on release
+  end)
+
+  -- Add tooltip
+  button:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Open Loot Master Panel", nil, nil, nil, nil, true)
+      bg:SetVertexColor(0.4, 0.4, 0.4, 1) -- Lighter gray on hover
+      GameTooltip:Show()
+  end)
+
+  button:SetScript("OnLeave", function(self)
+      bg:SetVertexColor(0.2, 0.2, 0.2, 1) -- Dark gray when not hovered
+      GameTooltip:Hide()
+  end)
+
+  button:SetScript("OnClick", function()
+    if LootMasterFrame:IsVisible() then
+      LootMasterFrame:Hide()
+    else
+      LootMasterFrame:Show()
+    end
+  end)
+  button:Hide()
+  return button
+end
+
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
-  if IsAddOnLoaded("pfUI") then
-    frame:SetWidth(240) -- Adjust size as needed
-  else 
-    frame:SetWidth(270)
-  end
+  
+  frame:SetWidth(270)
+  
   frame:SetHeight(400)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
@@ -289,18 +409,30 @@ local function CreateItemRollFrame()
   local EPGPl1 = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   local EPGPl2 = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   local EP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
+  local GP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
+  local EPGPRatio = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   EPGPl1:SetPoint("RIGHT", frame, "RIGHT", -35, 175)
-  EPGPl1:SetFont(EPGPl1:GetFont(), 13)
+  EPGPl1:SetFont(FONT_NAME, 13)
   EPGPl2:SetPoint("LEFT", EPGPl1, "BOTTOMLEFT", 0, -10)
-  EPGPl2:SetFont(EPGPl2:GetFont(), 10)
-  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 110, 26)
-  EP:SetFont(EP:GetFont(), 14)
-  EP:SetText("Your Priority:")
+  EPGPl2:SetFont(FONT_NAME, 10)
   EPGPl1:SetText("EPGP Prices")
-  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r  |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
+  EP:SetFont(FONT_NAME, 10)
+  EP:SetText("EP:")
+  GP:SetPoint("LEFT", EP, "BOTTOMLEFT", -2, -8)
+  GP:SetFont(FONT_NAME, 10)
+  GP:SetText("GP:")
+  EPGPRatio:SetPoint("LEFT", EP, "TOPLEFT", -25, 8)
+  EPGPRatio:SetFont(FONT_NAME, 10)
+  EPGPRatio:SetText("Priority:")
+  
+  
   frame.EPGPl1 = EPGPl1
   frame.EPGPl2 = EPGPl2
   frame.EP = EP
+  frame.GP = GP
+  frame.EPGPRatio = EPGPRatio
   
   frame.MSSR = CreateActionButton(frame, "MS SR", "Roll for MS SR", 1, function() RandomRoll(1,MSSRRollCap) end)
   frame.MS = CreateActionButton(frame, "MS", "Roll for MS", 2, function() RandomRoll(1,MSRollCap) end)
@@ -308,8 +440,10 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() RandomRoll(MSPrice, PlayerEP) end)
-  frame.BiDOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() RandomRoll(OSPrice, PlayerEP) end)
+  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BiDOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  
+  frame.LM = CreateLMButton(frame)
   
   frame:Hide()
 
@@ -441,7 +575,19 @@ local function ShowFrame(frame,duration,item)
       times = 5
     end
   end)
-  itemRollFrame.EP:SetText("Your Priority: " ..PlayerEP)
+  Ratio = PlayerEP/PlayerGP
+  Ratio = string.format("%.2f", Ratio)
+  itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+  itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+  itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+  if masterLooter == UnitName("player") and RaidEPGP == 1 then 
+    itemRollFrame.LM:Show()
+    LootMasterFrame:Show()
+  elseif GetRankOfRollerI(UnitName("player")) <= 2 and RaidEPGP == 1 then
+    itemRollFrame.LM:Show()
+  else
+    itemRollFrame.LM:Hide()
+  end
   frame:Show()
 end
 
@@ -471,26 +617,33 @@ local function GetClassOfRoller(rollerName)
   return nil -- Return nil if the player is not found in the raid
 end
 
-local function GetRankOfRoller(rollerName)
-  -- Iterate through the raid roster
-  for i = 1, GetNumGuildMembers() do
-      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
-      if name == rollerName then
-          return rankName -- Return the rank as a string (e.g., Core, Raider, Member)
-      end
-    end
-    return "Non-Guildie" -- Return nil if the player is not found in the raid
+local function updateAwardee()
+  if next(EPGPMSRollMessages) then
+    Awardee:SetText(EPGPMSRollMessages[1].type .. " " ..EPGPMSRollMessages[1].roller)
+    CurrentSelection = {
+          player = EPGPMSRollMessages[1].roller,
+          type = EPGPMSRollMessages[1].type,
+          price = MSPrice
+        }
+  elseif next(EPGPOSRollMessages) then
+    Awardee:SetText(EPGPOSRollMessages[1].type .. " " ..EPGPOSRollMessages[1].roller)
+    CurrentSelection = {
+          player = EPGPOSRollMessages[1].roller,
+          type = EPGPOSRollMessages[1].type,
+          price = OSPrice
+        }
+  else
+    Awardee:SetText("None")
+  end
 end
 
-local function GetRankOfRollerI(rollerName)
-  -- Iterate through the raid roster
-  for i = 1, GetNumGuildMembers() do
-      local name, rankName, rankIndex, level, classDisplayName, zone, publicNote, officerNote,  isOnline, status = GetGuildRosterInfo(i)
-      if name == rollerName then
-          return rankIndex-- Return the rank as a string (e.g., Core, Raider, Member)
-      end
-    end
-    return 13 -- Return nil if the player is not found in the raid
+function SendAward()
+  
+  if AwardSent ~= 1 then
+    AwardSent = 1
+    lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    SendAddonMessage(LB_PREFIX, LB_AWARD .. "-" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+  end
 end
 
 local function UpdateTextArea(frame)
@@ -501,54 +654,103 @@ local function UpdateTextArea(frame)
   -- frame.textArea:SetTeClear()  -- Clear the existing messages
   local text = ""
   local colored_msg = ""
-  local count = 0
+  
 
   sortRolls()
 
   for i, v in ipairs(EPGPMSRollMessages) do
+    local count = 0
     if count >= 15 then break end
     colored_msg = v.msg
     text = text .. colorEPGPMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(EPGPOSRollMessages) do
+    local count = 0
     if count >= 15 then break end
     colored_msg = v.msg
     text = text .. colorEPGPMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(MSSRRollMessages) do
+    local count = 0
     if count >= 8 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(MSRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(OSSRRollMessages) do
+    local count = 0
     if count >= 8 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(OSRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
   for i, v in ipairs(tmogRollMessages) do
+    local count = 0
     if count >= 30 then break end
     colored_msg = v.msg
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
-
+  updateAwardee()
+  OverrideFrameDropDownType_OnShow()
   frame.textArea:SetText(text)
+end
+
+function UpdateLMScrollFrame()
+  FauxScrollFrame_Update(LootMasterScrollFrame, 50, NUM_DISPLAY_ROWS, ROW_HEIGHT)
+  local offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+  for i = 1, NUM_DISPLAY_ROWS do
+    local rowIndex = offset + i;
+    local rowFrame = _G["LMScrollFrame" .. i];
+    if rowFrame then
+      if EPGPMSRollMessages[rowIndex] then
+        rowFrame:Show()
+        _G[rowFrame:GetName() .. "Column1"]:SetText(EPGPMSRollMessages[rowIndex].roller);
+        _G[rowFrame:GetName() .. "Column2"]:SetText(EPGPMSRollMessages[rowIndex].type);
+        _G[rowFrame:GetName() .. "Column3"]:SetText(EPGPMSRollMessages[rowIndex].ep);
+        _G[rowFrame:GetName() .. "Column4"]:SetText(EPGPMSRollMessages[rowIndex].gp);
+        _G[rowFrame:GetName() .. "Column5"]:SetText(EPGPMSRollMessages[rowIndex].ratio);
+        -- Set text for Column3, Column4, Column5
+      elseif EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)] then
+        rowFrame:Show()
+        _G[rowFrame:GetName() .. "Column1"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].roller);
+        _G[rowFrame:GetName() .. "Column2"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].type);
+        _G[rowFrame:GetName() .. "Column3"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].ep);
+        _G[rowFrame:GetName() .. "Column4"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].gp);
+        _G[rowFrame:GetName() .. "Column5"]:SetText(EPGPOSRollMessages[rowIndex - getn(EPGPMSRollMessages)].ratio);
+        -- Set text for Column3, Column4, Column5
+      else
+        rowFrame:Hide();
+      end
+      if getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages) >= NUM_DISPLAY_ROWS then
+        LootMasterScrollFrame:SetScript("OnMouseWheel", UpdateLMScrollFrame())
+        LootMasterScrollFrameScrollBar:Show()
+        LootMasterScrollFrameScrollBarScrollUpButton:Show()
+        LootMasterScrollFrameScrollBarScrollDownButton:Show()
+      else
+        LootMasterScrollFrame:SetScript("OnMouseWheel", function() end)
+        LootMasterScrollFrameScrollBar:Hide()
+        LootMasterScrollFrameScrollBarScrollUpButton:Hide()
+        LootMasterScrollFrameScrollBarScrollDownButton:Hide()
+      end
+    end
+  end
 end
 
 local function ExtractItemLinksFromMessage(message)
@@ -572,6 +774,8 @@ local function swapButtons()
     itemRollFrame.EPGPl1:Show()
     itemRollFrame.EPGPl2:Show()
     itemRollFrame.EP:Show()
+    itemRollFrame.GP:Show()
+    itemRollFrame.EPGPRatio:Show()
   elseif RaidEPGP == 0 then
     itemRollFrame.MSSR:Show()
     itemRollFrame.MS:Show()
@@ -583,6 +787,8 @@ local function swapButtons()
     itemRollFrame.EPGPl1:Hide()
     itemRollFrame.EPGPl2:Hide()
     itemRollFrame.EP:Hide()
+    itemRollFrame.GP:Hide()
+    itemRollFrame.EPGPRatio:Hide()
   end
 end
 
@@ -609,7 +815,7 @@ local function ZoneCheck()
       swapButtons()
       lb_print("EPGP functions|cFF00FF00 enabled|r")
     end
-  elseif K40 == 1 and zone == "Tower of Karazhan"  then
+  elseif K40 == 1 and zone == "Tower of Karazhan" and GetNumRaidMembers() > 15 then
     if RaidEPGP ~= 1 then
       RaidEPGP = 1
       PriceDB = Kara40
@@ -647,40 +853,47 @@ local function IsSenderMasterLooter(sender)
   return false
 end
 
-local function GetMasterLooterInParty()
-  local lootMethod, masterLooterPartyID = GetLootMethod()
-  if lootMethod == "master" and masterLooterPartyID then
-    if masterLooterPartyID == 0 then
-      return UnitName("player")
+function LM_OnLoad()
+  LootMasterFrame:RegisterForDrag("LeftButton")
+
+  for i = 1, NUM_DISPLAY_ROWS do
+    local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
+    if i == 1 then
+      rowFrame:SetPoint("TOPLEFT", LootMasterScrollFrame, "TOPLEFT", 2, -5);
     else
-      local senderUID = "party" .. masterLooterPartyID
-      local masterLooterName = UnitName(senderUID)
-      return masterLooterName
+      rowFrame:SetPoint("TOPLEFT", _G["LMScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
     end
+    --rowFrame:Hide()
   end
-  return nil
 end
 
-local function RollCheck(minRoll, maxRoll, message)
-  if RaidEPGP == 0 then
-          if maxRoll == tostring(MSSRRollCap) then
-            table.insert(MSSRRollMessages, message)
-          elseif maxRoll == tostring(MSRollCap) then
-            table.insert(MSRollMessages, message)
-          elseif maxRoll == tostring(OSSRRollCap) then
-            table.insert(OSSRRollMessages, message)
-          elseif maxRoll == tostring(OSRollCap) then
-            table.insert(OSRollMessages, message)
-          elseif maxRoll == tostring(tmogRollCap) then
-            table.insert(tmogRollMessages, message)
-          end
-        elseif RaidEPGP == 1 then
-          if minRoll == tostring(MSPrice) then
-            table.insert(EPGPMSRollMessages, message)
-          elseif minRoll == tostring(OSPrice) then
-            table.insert(EPGPOSRollMessages, message)
-          end
-        end
+function kiddos ()
+    DEFAULT_CHAT_FRAME:AddMessage(GetMouseFocus():GetName())
+    local kiddos = { GetMouseFocus():GetRegions() };
+    for _, child in ipairs(kiddos) do
+        DEFAULT_CHAT_FRAME:AddMessage(child:GetName());
+    end
+end
+
+function LM_StartMoving()
+	
+	LootMasterFrame:StartMoving();
+	
+end
+
+local function RollCheck(maxRoll, message)
+  
+  if maxRoll == tostring(MSSRRollCap) then
+    table.insert(MSSRRollMessages, message)
+  elseif maxRoll == tostring(MSRollCap) then
+    table.insert(MSRollMessages, message)
+  elseif maxRoll == tostring(OSSRRollCap) then
+    table.insert(OSSRRollMessages, message)
+  elseif maxRoll == tostring(OSRollCap) then
+    table.insert(OSRollMessages, message)
+  elseif maxRoll == tostring(tmogRollCap) then
+    table.insert(tmogRollMessages, message)
+  end  
 end
 
 local function HandleChatMessage(event, message, sender)
@@ -720,7 +933,7 @@ local function HandleChatMessage(event, message, sender)
         roll = tonumber(roll)
         rollers[roller] = 1
         message = { rank = GetRankOfRoller(roller), rankI = GetRankOfRollerI(roller), roller = roller, roll = roll, minRoll = minRoll, maxRoll = maxRoll, msg = message, class = GetClassOfRoller(roller) }
-        RollCheck(minRoll, maxRoll, message)
+        RollCheck(maxRoll, message)
         UpdateTextArea(itemRollFrame)
       end
     end
@@ -735,8 +948,10 @@ local function HandleChatMessage(event, message, sender)
         string.find(message, " received ") then
         return
       end
+      AwardSent = 0
       resetRolls()
       UpdateTextArea(itemRollFrame)
+      UpdateLMScrollFrame()
       time_elapsed = 0
       isRolling = true
       ShowFrame(itemRollFrame,FrameShownDuration,links[1])
@@ -749,8 +964,8 @@ local function HandleChatMessage(event, message, sender)
   elseif event == "ADDON_LOADED"then
     if FrameShownDuration == nil then FrameShownDuration = 15 end
     if FrameAutoClose == nil then FrameAutoClose = true end
-    if PlayerEP == nil then lb_print("Test")
-    PlayerEP = 0 end
+    if PlayerEP == nil then PlayerEP = 100 end
+    if PlayerGP == nil then PlayerGP = 100 end
     
     if IsSenderMasterLooter(UnitName("player")) then
       SendAddonMessage(LB_PREFIX, LB_SET_ML .. UnitName("player"), "RAID")
@@ -759,10 +974,13 @@ local function HandleChatMessage(event, message, sender)
     else
       SendAddonMessage(LB_PREFIX, LB_GET_DATA, "RAID")
     end
+
   elseif event == "PARTY_MEMBERS_CHANGED"then
     RequestML()
+    ZoneCheck()
   elseif event == "RAID_ROSTER_UPDATE"then
     RequestML()
+    ZoneCheck()
   elseif event == "CHAT_MSG_ADDON" and arg1 == LB_PREFIX then
     local prefix, message, channel, sender = arg1, arg2, arg3, arg4
 
@@ -790,6 +1008,45 @@ local function HandleChatMessage(event, message, sender)
         lb_print("Roll time set to " .. FrameShownDuration .. " seconds.")
       end
     end
+    --EPGP Communication--
+    if string.find(message, LB_BID) then
+      local msg
+      local _,_,player = string.find(message, "Player: (%S+)")
+      local _,_,type = string.find(message, "-(%u+)-")
+      local _,_,effort = string.find(message, "+(%d*%.?%d+)+")
+      local _,_,gear = string.find(message, "*(%d*%.?%d+)*")
+      local _,_,rat = string.find(message, "=(%d*%.?%d+)=")
+      rat = string.format("%.2f", rat)
+      msg = { rank = GetRankOfRoller(player), rankI = GetRankOfRollerI(player), roller = player, type = type, ep = tonumber(effort), gp = tonumber(gear), ratio = tonumber(rat), class = GetClassOfRoller(player) }
+    
+      --lb_print(message)
+      --lb_print(player.. " "..type.." "..effort.." "..gear.." "..rat)
+      if rollers[player] == nil then
+        rollers[player] = 1
+        if type == "MS" then
+          table.insert(EPGPMSRollMessages, msg)
+        elseif type == "OS" then
+          table.insert(EPGPOSRollMessages, msg)
+        end
+        UpdateTextArea(itemRollFrame)
+        UpdateLMScrollFrame()
+      end
+      
+    end
+
+    if string.find(message, LB_AWARD) then
+      local msg
+      local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,price = string.find(message, "+(%d*%.?%d+)+")
+      if player == UnitName("player") then
+        PlayerGP = PlayerGP + tonumber(price)
+        Ratio = PlayerEP/PlayerGP
+        Ratio = string.format("%.2f", Ratio)
+        itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+        itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        
+      end
+    end
   end
 end
 
@@ -807,6 +1064,7 @@ itemRollFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 itemRollFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 itemRollFrame:SetScript("OnEvent", function () HandleChatMessage(event,arg1,arg2) end)
 
+
 -- Register the slash command
 SLASH_LOOTBLARE1 = '/lootblare'
 SLASH_LOOTBLARE2 = '/lb'
@@ -819,10 +1077,15 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       itemRollFrame:Hide()
     else
       itemRollFrame:Show()
+      if masterLooter == UnitName("player") or GetRankOfRollerI(UnitName("player")) <= 2 then 
+        itemRollFrame.LM:Show()
+        LootMasterFrame:Show()
+      end
     end
   elseif msg == "help" then
     lb_print("LootBlare is a simple addon that displays and sort item rolls in a frame.")
-    lb_print("Type /lb EP <your ep> to set your priority within the addon")
+    lb_print("Type /lb EP <your EP> to set your EP within the addon")
+    lb_print("Type /lb GP <your GP> to set your GP within the addon")
     lb_print("Type /lb check to print your current EP")
     lb_print("Type /lb time <seconds> to set the duration the frame is shown. This value will be automatically set by the master looter after the first rolls.")
     lb_print("Type /lb autoClose on/off to enable/disable auto closing the frame after the time has elapsed.")
@@ -855,16 +1118,35 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       lb_print("Invalid option. Please enter 'on' or 'off'.")
     end
   elseif string.find(msg, "ep") then
-    local _,_,newEP = string.find(msg, "ep (%d+)")
+    local _,_,newEP = string.find(msg, "ep (%d*%.?%d+)")
     newEP = tonumber(newEP)
     if newEP == nil then
       newEP = PlayerEP
     end
     PlayerEP = newEP
-    lb_print("Your priority has been set to " ..PlayerEP)
-    itemRollFrame.EP:SetText("Your Priority: " ..PlayerEP)
+    Ratio = PlayerEP/PlayerGP
+    Ratio = string.format("%.2f", Ratio)
+    lb_print("Your EP has been set to " ..PlayerEP)
+    itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+  elseif string.find(msg, "gp") then
+    local _,_,newGP = string.find(msg, "gp (%d*%.?%d+)")
+    newGP = tonumber(newGP)
+    if newGP == nil then
+      newGP = PlayerGP
+    end
+    PlayerGP = newGP
+    lb_print("Your GP has been set to " ..PlayerGP)
+    Ratio = PlayerEP/PlayerGP
+    Ratio = string.format("%.2f", Ratio)
+    itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
+    lb_print("Your current GP is set to: " ..PlayerGP)
+    lb_print("Your current priority is: " ..Ratio)
+  elseif string.find(msg, "kiddos") then
+    kiddos()
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end

@@ -1,0 +1,235 @@
+<!--
+XML file for advanced interface for LootBlareGM
+
+
+
+
+
+-->
+
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+    <Frame name="LMScrollEntryTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="400" y="20"/>
+        </Size>
+		
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="$parentColumn1" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-192" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn2" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn1">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn3" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn2">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn4" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn3">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn5" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn4">
+							<Offset>
+								<AbsDimension x="70" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+        
+    </Frame>
+
+
+	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
+        <Size>
+            <AbsDimension x="400" y="400" />
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER">
+                <Offset>
+                    <AbsDimension x="-50" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+            <BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+            <BorderColor r="0.6" g="0.6" b="0.6"/>
+            <Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+        </Backdrop>
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="Column 1 Header" inherits="GameFontNormalSmall" text="Player">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-160" y="180"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 2 Header" inherits="GameFontNormalSmall" text="Roll Type">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 1 Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 3 Header" inherits="GameFontNormalSmall" text="EP">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 2 Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 4 Header" inherits="GameFontNormalSmall" text="GP">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 3 Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 5 Header" inherits="GameFontNormalSmall" text="Priority">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 4 Header">
+							<Offset>
+								<AbsDimension x="70" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+        <Scripts>
+            <OnLoad>
+                LM_OnLoad();
+            </OnLoad>
+            <OnHide>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnHide>
+			<OnDragStart>
+				if(arg1 == "LeftButton") then
+					LM_StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnDragStop>
+			<OnMouseUp>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnMouseUp>
+        </Scripts>
+        <Frames>
+            <Button name="LootMasterFrameCloseButton" inherits="UIPanelCloseButton" >
+			    <Anchors>
+				    <Anchor point="TOPRIGHT" relativeTo="LootMasterFrame" relativePoint="TOPRIGHT">
+					    <Offset>
+				    	    <AbsDimension x="0" y="-2"/>
+					    </Offset>
+				    </Anchor>
+			    </Anchors>
+		    </Button>
+            <Button name="AwardButton" inherits="UIPanelButtonTemplate2" text="Award" >
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="10" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						SendAward()
+					</OnClick>
+				</Scripts>
+		    </Button>
+            <Button name="OverideFrameDropDownType" inherits="UIDropDownMenuTemplate">
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="Awardee" inherits="GameFontNormalSmall"  text="Overide Award">
+							<Anchors>
+								<Anchor point="LEFT" relativePoint="LEFT">
+									<Offset>
+										<AbsDimension x="27" y="2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="AwardButton" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<OnLoad>
+					UIDropDownMenu_Initialize(self, Override_InitializeDropdown)
+				</OnLoad>
+			</Button>
+			<ScrollFrame name="LootMasterScrollFrame" parent="LootMasterFrame" inherits="FauxScrollFrameTemplate">
+    			<Anchors>
+        			<Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="30" y="-30"/>
+						</Offset>
+					</Anchor>
+					<Anchor point="BOTTOmRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-30" y="70"/>
+						</Offset>
+					</Anchor>
+    			</Anchors>
+    			<Scripts>
+    	    		<OnVerticalScroll>
+    	        		FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT, UpdateLMScrollFrame);
+    	    		</OnVerticalScroll>
+    	    		<OnShow>
+						UpdateLMScrollFrame();
+    	    		</OnShow>
+    			</Scripts>
+			</ScrollFrame>
+        </Frames>
+    </Frame>
+</Ui>
