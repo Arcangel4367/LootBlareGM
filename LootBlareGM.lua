@@ -25,7 +25,7 @@ local tmogRollCap = 50
 PriceDB = nil
 local CurrentSelection
 local RaidEPGP = 0
-local TestZone = 1
+local TestZone = 0
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -440,8 +440,8 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
-  frame.BiDOS = CreateActionButton(frame, "OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BiDOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
   
   frame.LM = CreateLMButton(frame)
   
@@ -1016,6 +1016,7 @@ local function HandleChatMessage(event, message, sender)
       local _,_,effort = string.find(message, "+(%d*%.?%d+)+")
       local _,_,gear = string.find(message, "*(%d*%.?%d+)*")
       local _,_,rat = string.find(message, "=(%d*%.?%d+)=")
+      rat = string.format("%.2f", rat)
       msg = { rank = GetRankOfRoller(player), rankI = GetRankOfRollerI(player), roller = player, type = type, ep = tonumber(effort), gp = tonumber(gear), ratio = tonumber(rat), class = GetClassOfRoller(player) }
     
       --lb_print(message)
