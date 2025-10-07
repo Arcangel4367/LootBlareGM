@@ -179,10 +179,35 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						SendAward()
+						AwardConfirmation()
 					</OnClick>
 				</Scripts>
 		    </Button>
+			<Button name="OverideTypeFrameDropDownType" inherits="UIDropDownMenuTemplate">
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="AwardType" inherits="GameFontNormalSmall"  text="Type">
+							<Anchors>
+								<Anchor point="LEFT" relativePoint="LEFT">
+									<Offset>
+										<AbsDimension x="27" y="2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="AwardButton" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="-20" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<OnLoad>
+					UIDropDownMenu_Initialize(self, OverrideType_InitializeDropDown)
+				</OnLoad>
+			</Button>
             <Button name="OverideFrameDropDownType" inherits="UIDropDownMenuTemplate">
 				<Layers>
 					<Layer level="FOREGROUND">
@@ -200,7 +225,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="AwardButton" relativePoint="RIGHT">
 						<Offset>
-							<AbsDimension x="-10" y="-2"/>
+							<AbsDimension x="45" y="-2"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -215,7 +240,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 							<AbsDimension x="30" y="-30"/>
 						</Offset>
 					</Anchor>
-					<Anchor point="BOTTOmRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
+					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
 						<Offset>
 							<AbsDimension x="-30" y="70"/>
 						</Offset>
@@ -232,4 +257,79 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 			</ScrollFrame>
         </Frames>
     </Frame>
+
+	<Frame name="AwardConfirm" toplevel="true enable" enableMouse="true" parent="UIParent" hidden="true">
+		<Size>
+			<AbsDimension x="180" y="70"/>
+		</Size>
+		<Anchors>
+            <Anchor point="CENTER">
+                <Offset>
+                    <AbsDimension x="-50" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+            <BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+            <BorderColor r="0.6" g="0.6" b="0.6"/>
+            <Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+        </Backdrop>
+		<Frames>
+			<Button name="Confirm" inherits="UIPanelButtonTemplate2" text="Confirm">
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="AwardConfirm" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-30" y="-15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="60" y="32"/>
+				</Size>
+				<Scripts>
+					<OnClick>
+							AwardSend()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="Cancel" inherits="UIPanelButtonTemplate2" text="Cancel">
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="AwardConfirm" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="30" y="-15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="60" y="32"/>
+				</Size>
+				<Scripts>
+					<OnClick>
+							AwardCancel()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Layers>
+			<Layer>
+				<FontString name="Confirmation" inherits="GameFontNormal" text="Test Info">
+					<FontHeight>
+						<AbsValue val="14"/>
+					</FontHeight>
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="AwardConfirm" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="0" y="15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
 </Ui>

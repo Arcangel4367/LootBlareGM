@@ -25,7 +25,7 @@ local tmogRollCap = 50
 PriceDB = nil
 local CurrentSelection
 local RaidEPGP = 0
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -219,9 +219,40 @@ local function CheckItem(link)
   return false
 end
 
-function Override_InitializeDropdown()
-  local info
+function OverrideType_InitializeDropDown()
+
+  local MS = UIDropDownMenu_CreateInfo()
   
+
+  MS = {
+    text = "MS",
+    value = 0,
+    type = "MS",
+    func = function(self)
+      AwardType:SetText(MS.type)
+      CurrentSelection.type = MS.type
+      CurrentSelection.price = MSPrice
+      
+    end
+  }
+  UIDropDownMenu_AddButton(MS)
+  local OS = UIDropDownMenu_CreateInfo()
+  OS = {
+    text = "OS",
+    value = 1,
+    type = "OS",
+    func = function(self)
+      AwardType:SetText(OS.type)
+      CurrentSelection.type = OS.type
+      CurrentSelection.price = OSPrice
+      
+    end
+  }
+  
+  UIDropDownMenu_AddButton(OS)
+end
+
+function Override_InitializeDropdown()
 
   for i, v in ipairs(EPGPMSRollMessages) do
     local info = UIDropDownMenu_CreateInfo()
@@ -231,7 +262,8 @@ function Override_InitializeDropdown()
       player = EPGPMSRollMessages[i].roller,
       type = EPGPMSRollMessages[i].type,
       func = function(self)
-        Awardee:SetText(info.type .. " " .. info.player)
+        Awardee:SetText(info.player)
+        AwardType:SetText(info.type)
         CurrentSelection = {
           player = info.player,
           type = info.type,
@@ -249,7 +281,8 @@ function Override_InitializeDropdown()
       player = EPGPOSRollMessages[i].roller,
       type = EPGPOSRollMessages[i].type,
       func = function(self)
-        Awardee:SetText(info.type .. " " .. info.player)
+        Awardee:SetText(info.player)
+        AwardType:SetText(info.type)
         CurrentSelection = {
           player = info.player,
           type = info.type,
@@ -263,7 +296,9 @@ end
 
 function OverrideFrameDropDownType_OnShow()
   UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
+  UIDropDownMenu_Initialize(OverideTypeFrameDropDownType, OverrideType_InitializeDropDown)
   UIDropDownMenu_SetWidth(120, OverideFrameDropDownType);
+  UIDropDownMenu_SetWidth(50, OverideTypeFrameDropDownType);
 end
 
 function CreateCloseButton(frame)
@@ -548,7 +583,7 @@ local function SetItemInfo(frame, itemLinkArg)
   frame.iconButton:SetNormalTexture(itemIcon)  -- Sets the same texture as the icon
 
   frame.name:SetText(GetColoredTextByQuality(itemName,itemQuality))
-
+  
   frame.itemLink = itemLink
   return true
 end
@@ -619,14 +654,16 @@ end
 
 local function updateAwardee()
   if next(EPGPMSRollMessages) then
-    Awardee:SetText(EPGPMSRollMessages[1].type .. " " ..EPGPMSRollMessages[1].roller)
+    Awardee:SetText(EPGPMSRollMessages[1].roller)
+    AwardType:SetText(EPGPMSRollMessages[1].type)
     CurrentSelection = {
           player = EPGPMSRollMessages[1].roller,
           type = EPGPMSRollMessages[1].type,
           price = MSPrice
         }
   elseif next(EPGPOSRollMessages) then
-    Awardee:SetText(EPGPOSRollMessages[1].type .. " " ..EPGPOSRollMessages[1].roller)
+    Awardee:SetText(EPGPOSRollMessages[1].roller)
+    AwardType:SetText(EPGPOSRollMessages[1].type)
     CurrentSelection = {
           player = EPGPOSRollMessages[1].roller,
           type = EPGPOSRollMessages[1].type,
@@ -636,14 +673,25 @@ local function updateAwardee()
     Awardee:SetText("None")
   end
 end
+function AwardConfirmation()
+  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n going to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+  if AwardSent ~= 1 then
+    AwardConfirm:Show()
+  end
+end
 
-function SendAward()
+function AwardCancel()
+  AwardConfirm:Hide()
+end
+
+function AwardSend()
   
   if AwardSent ~= 1 then
     AwardSent = 1
-    lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    --lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
     SendAddonMessage(LB_PREFIX, LB_AWARD .. "-" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
   end
+  AwardConfirm:Hide()
 end
 
 local function UpdateTextArea(frame)
@@ -1038,6 +1086,7 @@ local function HandleChatMessage(event, message, sender)
       local msg
       local _,_,player = string.find(message, "-(%S+)-")
       local _,_,price = string.find(message, "+(%d*%.?%d+)+")
+      lb_print("Item awarded to: " .. player .. " for " .. price)
       if player == UnitName("player") then
         PlayerGP = PlayerGP + tonumber(price)
         Ratio = PlayerEP/PlayerGP
