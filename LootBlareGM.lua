@@ -107,7 +107,7 @@ local function sortRolls()
   table.sort(OSSRRollMessages, function(a, b)
     return a.roll > b.roll
   end)
-  table.sort(MSRollMessages, function(a, b)
+  table.sort(OSRollMessages, function(a, b)
     return a.roll > b.roll
   end)
   table.sort(tmogRollMessages, function(a, b)
