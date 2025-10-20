@@ -25,7 +25,7 @@ local tmogRollCap = 50
 PriceDB = nil
 local CurrentSelection
 local RaidEPGP = 0
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -76,7 +76,7 @@ local function lb_print(msg)
 end
 
 NUM_DISPLAY_ROWS = 12
-ROW_HEIGHT = 20
+ScrollShow = nil
 
 local function resetRolls()
   MSSRRollMessages = {}
@@ -768,9 +768,25 @@ local function UpdateTextArea(frame)
   frame.textArea:SetText(text)
 end
 
+
+
 function UpdateLMScrollFrame()
-  FauxScrollFrame_Update(LootMasterScrollFrame, 50, NUM_DISPLAY_ROWS, ROW_HEIGHT)
-  local offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+  local length
+  local offset = 0
+  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > 12 then
+    length = (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages))
+    offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+    LootMasterScrollFrameScrollBar:Show()
+    LootMasterScrollFrameScrollBarScrollUpButton:Show()
+    LootMasterScrollFrameScrollBarScrollDownButton:Show()
+  else
+    length = 13
+    LootMasterScrollFrameScrollBar:Hide()
+    LootMasterScrollFrameScrollBarScrollUpButton:Hide()
+    LootMasterScrollFrameScrollBarScrollDownButton:Hide()
+  end
+  FauxScrollFrame_Update(LootMasterScrollFrame, length, NUM_DISPLAY_ROWS, 20)
+  
   for i = 1, NUM_DISPLAY_ROWS do
     local rowIndex = offset + i;
     local rowFrame = _G["LMScrollFrame" .. i];
@@ -793,17 +809,6 @@ function UpdateLMScrollFrame()
         -- Set text for Column3, Column4, Column5
       else
         rowFrame:Hide();
-      end
-      if getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages) >= NUM_DISPLAY_ROWS then
-        LootMasterScrollFrame:SetScript("OnMouseWheel", UpdateLMScrollFrame())
-        LootMasterScrollFrameScrollBar:Show()
-        LootMasterScrollFrameScrollBarScrollUpButton:Show()
-        LootMasterScrollFrameScrollBarScrollDownButton:Show()
-      else
-        LootMasterScrollFrame:SetScript("OnMouseWheel", function() end)
-        LootMasterScrollFrameScrollBar:Hide()
-        LootMasterScrollFrameScrollBarScrollUpButton:Hide()
-        LootMasterScrollFrameScrollBarScrollDownButton:Hide()
       end
     end
   end
@@ -1078,7 +1083,7 @@ local function HandleChatMessage(event, message, sender)
       --lb_print(message)
       --lb_print(player.. " "..type.." "..effort.." "..gear.." "..rat)
       if rollers[player] == nil then
-        rollers[player] = 1
+        --rollers[player] = 1
         if type == "MS" then
           table.insert(EPGPMSRollMessages, msg)
         elseif type == "OS" then
