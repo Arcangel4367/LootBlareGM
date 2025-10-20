@@ -248,7 +248,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
     			</Anchors>
     			<Scripts>
     	    		<OnVerticalScroll>
-    	        		FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT, UpdateLMScrollFrame);
+    	        		FauxScrollFrame_OnVerticalScroll(20, UpdateLMScrollFrame);
     	    		</OnVerticalScroll>
     	    		<OnShow>
 						UpdateLMScrollFrame();
