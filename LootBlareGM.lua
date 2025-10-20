@@ -76,7 +76,7 @@ local function lb_print(msg)
 end
 
 NUM_DISPLAY_ROWS = 12
-ScrollShow = 0
+ScrollShow = nil
 
 local function resetRolls()
   MSSRRollMessages = {}
@@ -772,13 +772,21 @@ end
 
 function UpdateLMScrollFrame()
   local length
-  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > 13 then
+  local offset = 0
+  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > 12 then
     length = (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages))
+    offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+    LootMasterScrollFrameScrollBar:Show()
+    LootMasterScrollFrameScrollBarScrollUpButton:Show()
+    LootMasterScrollFrameScrollBarScrollDownButton:Show()
   else
     length = 13
+    LootMasterScrollFrameScrollBar:Hide()
+    LootMasterScrollFrameScrollBarScrollUpButton:Hide()
+    LootMasterScrollFrameScrollBarScrollDownButton:Hide()
   end
   FauxScrollFrame_Update(LootMasterScrollFrame, length, NUM_DISPLAY_ROWS, 20)
-  local offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
+  
   for i = 1, NUM_DISPLAY_ROWS do
     local rowIndex = offset + i;
     local rowFrame = _G["LMScrollFrame" .. i];
