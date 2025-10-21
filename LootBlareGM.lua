@@ -1083,7 +1083,7 @@ local function HandleChatMessage(event, message, sender)
       --lb_print(message)
       --lb_print(player.. " "..type.." "..effort.." "..gear.." "..rat)
       if rollers[player] == nil then
-        --rollers[player] = 1
+        rollers[player] = 1
         if type == "MS" then
           table.insert(EPGPMSRollMessages, msg)
         elseif type == "OS" then
