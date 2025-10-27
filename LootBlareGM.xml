@@ -610,7 +610,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 		    </Button>
-			<EditBox name="FixEPBox" inherits="InputBoxTemplate" autoFocus="false" numeric="true">
+			<EditBox name="FixEPBox" inherits="InputBoxTemplate" autoFocus="false" >
 				<Size>
 					<AbsDimension x="80" y="32"/>
 				</Size>
@@ -629,7 +629,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				</Scripts>
 
 			</EditBox>
-			<EditBox name="FixGPBox" inherits="InputBoxTemplate" autoFocus="false" numeric="true">
+			<EditBox name="FixGPBox" inherits="InputBoxTemplate" autoFocus="false" >
 				<Size>
 					<AbsDimension x="80" y="32"/>
 				</Size>

@@ -277,14 +277,13 @@ function FixSelect_InitializeDropdown()
           gp = data[3],
           func = function(self)
             SelectedRaider:SetText(info.player)
+            FixEPBox:SetText(info.ep)
+            FixGPBox:SetText(info.gp)
             FixSelected = {
               player = info.player,
               ep = info.ep,
               gp = info.gp,
-              activegp = 100,
-              FixEPBox:SetText(info.ep),
-              FixGPBox:SetText(info.gp),
-              
+              activegp = 100, 
             }
             if info.gp < 100 then
               FixSelected.activegp = 100
@@ -296,42 +295,43 @@ function FixSelect_InitializeDropdown()
         }
       else
         info = {
-        text = name,
-        value = i;
-        player = name,
-        ep = 100,
-        gp = 0,
-        func = function(self)
-          SelectedRaider:SetText(info.player)
-          FixSelected = {
-            player = info.player,
-            ep = info.ep,
-            gp = info.gp,
-            activegp = 100,
-            FixEPBox:SetText(info.ep),
-            FixGPBox:SetText(info.gp),
-            FixRatio:SetText(info.ratio),
-          }
-          FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
-        end
-      }
+          text = name,
+          value = i;
+          player = name,
+          ep = 100,
+          gp = 0,
+          func = function(self)
+            SelectedRaider:SetText(info.player)
+            FixEPBox:SetText(info.ep)
+            FixGPBox:SetText(info.gp)
+            FixSelected = {
+              player = info.player,
+              ep = info.ep,
+              gp = info.gp,
+              activegp = 100,
+            }
+            FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
+          end
+        }
       end
       UIDropDownMenu_AddButton(info)
     
   end
 end
+
 function UpdateFixes()
   FixEPBox:ClearFocus()
   FixGPBox:ClearFocus()
   FixSelected.ep = tonumber(FixEPBox:GetText())
   FixSelected.gp = tonumber(FixGPBox:GetText())
-  FixSelected.ratio = string.format("%.2f", (FixSelected.ep / FixSelected.activegp))
-  FixRatio:SetText(FixSelected.ratio)
+  FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
 end
 
 function SendEPGPValues()
+  UpdateFixes()
   if FixSelected ~= nil then
-    SendAddonMessage(LB_PREFIX,LB_EPGPSET.. " -" ..FixSelected.player.. "- +" ..FixSelected.ep.."+ *"..FixSelected.gp.."* =" ..FixSelected.ratio.."= ", "RAID")
+    lb_print("Sending EPGP values for " ..FixSelected.player.. ": EP: " ..FixSelected.ep.. ", GP: " ..FixSelected.gp.. ", Ratio: " ..string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
+    SendAddonMessage(LB_PREFIX,LB_EPGPSET.. " -" ..FixSelected.player.. "- +" ..FixSelected.ep.."+ *"..FixSelected.gp.."* ", "RAID")
   end
 end
 
@@ -1182,7 +1182,7 @@ local function HandleChatMessage(event, message, sender)
     if FrameAutoClose == nil then FrameAutoClose = true end
     if PlayerEP == nil then PlayerEP = 100 end
     if PlayerGP == nil then PlayerGP = 0 end
-    
+    CheckGP()
     if IsSenderMasterLooter(UnitName("player")) then
       SendAddonMessage(LB_PREFIX, LB_SET_ML .. UnitName("player"), "RAID")
       SendAddonMessage(LB_PREFIX, LB_SET_ROLL_TIME .. FrameShownDuration, "RAID")
@@ -1240,7 +1240,8 @@ local function HandleChatMessage(event, message, sender)
         itemRollFrame.EP:SetText("EP: " ..PlayerEP)
         lb_print("Your EP has been set to: " .. PlayerEP)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
-        lb_print("Your GP has been set to: " .. ActiveGP)
+        lb_print("Your Real GP has been set to: " .. PlayerGP)
+        lb_print("Your Effective GP has been set to: " .. ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         lb_print("Your Priority has been set to: " .. Ratio)
       end
