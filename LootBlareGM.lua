@@ -27,7 +27,7 @@ local CurrentSelection
 local FixSelected
 local RaidEPGP = 0
 local MinGP = 100
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -1183,6 +1183,7 @@ local function HandleChatMessage(event, message, sender)
     if PlayerEP == nil then PlayerEP = 100 end
     if PlayerGP == nil then PlayerGP = 0 end
     CheckGP()
+    Ratio = string.format("%.2f", PlayerEP/ActiveGP)
     if IsSenderMasterLooter(UnitName("player")) then
       SendAddonMessage(LB_PREFIX, LB_SET_ML .. UnitName("player"), "RAID")
       SendAddonMessage(LB_PREFIX, LB_SET_ROLL_TIME .. FrameShownDuration, "RAID")
