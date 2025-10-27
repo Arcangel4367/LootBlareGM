@@ -24,7 +24,9 @@ local tmogRollCap = 50
 --EPGP Settings--
 PriceDB = nil
 local CurrentSelection
+local FixSelected
 local RaidEPGP = 0
+local MinGP = 100
 local TestZone = 1
 local Naxx = 0
 local K40 = 1
@@ -64,12 +66,13 @@ local RAIDER_TEXT_COLOR = "FFFFFF00"
 local CASUAL_TEXT_COLOR = "FFEC9512"
 local MEMPUG_TEXT_COLOR = "FFFFFFFF"
 
-local LB_PREFIX = "LootBlare"
+local LB_PREFIX = "LootBlare "
 local LB_GET_DATA = "get data"
 local LB_SET_ML = "ML set to "
 local LB_SET_ROLL_TIME = "Roll time set to "
 local LB_BID = "Bid on item: "
 local LB_AWARD = "Awarded to: "
+local LB_EPGPSET = "EPGP Set: "
 
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
@@ -252,6 +255,86 @@ function OverrideType_InitializeDropDown()
   UIDropDownMenu_AddButton(OS)
 end
 
+function FixSelect_InitializeDropdown()
+  local numMembers = GetNumRaidMembers()
+  for k = 1, numMembers do
+    local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(k)
+
+
+      
+      local i = 1
+      while ImportEPGP[i][1]~= name and i < getn(ImportEPGP) do
+        i = i + 1
+      end
+      local data = ImportEPGP[i]
+      local info = UIDropDownMenu_CreateInfo()
+      if name == data[1] then
+        info = {
+          text = name,
+          value = i;
+          player = name,
+          ep = data[2],
+          gp = data[3],
+          func = function(self)
+            SelectedRaider:SetText(info.player)
+            FixSelected = {
+              player = info.player,
+              ep = info.ep,
+              gp = info.gp,
+              activegp = 100,
+              FixEPBox:SetText(info.ep),
+              FixGPBox:SetText(info.gp),
+              
+            }
+            if info.gp < 100 then
+              FixSelected.activegp = 100
+            else
+              FixSelected.activegp = info.gp
+            end
+            FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
+          end
+        }
+      else
+        info = {
+        text = name,
+        value = i;
+        player = name,
+        ep = 100,
+        gp = 0,
+        func = function(self)
+          SelectedRaider:SetText(info.player)
+          FixSelected = {
+            player = info.player,
+            ep = info.ep,
+            gp = info.gp,
+            activegp = 100,
+            FixEPBox:SetText(info.ep),
+            FixGPBox:SetText(info.gp),
+            FixRatio:SetText(info.ratio),
+          }
+          FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
+        end
+      }
+      end
+      UIDropDownMenu_AddButton(info)
+    
+  end
+end
+function UpdateFixes()
+  FixEPBox:ClearFocus()
+  FixGPBox:ClearFocus()
+  FixSelected.ep = tonumber(FixEPBox:GetText())
+  FixSelected.gp = tonumber(FixGPBox:GetText())
+  FixSelected.ratio = string.format("%.2f", (FixSelected.ep / FixSelected.activegp))
+  FixRatio:SetText(FixSelected.ratio)
+end
+
+function SendEPGPValues()
+  if FixSelected ~= nil then
+    SendAddonMessage(LB_PREFIX,LB_EPGPSET.. " -" ..FixSelected.player.. "- +" ..FixSelected.ep.."+ *"..FixSelected.gp.."* =" ..FixSelected.ratio.."= ", "RAID")
+  end
+end
+
 function Override_InitializeDropdown()
 
   for i, v in ipairs(EPGPMSRollMessages) do
@@ -297,8 +380,11 @@ end
 function OverrideFrameDropDownType_OnShow()
   UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
   UIDropDownMenu_Initialize(OverideTypeFrameDropDownType, OverrideType_InitializeDropDown)
-  UIDropDownMenu_SetWidth(120, OverideFrameDropDownType);
-  UIDropDownMenu_SetWidth(50, OverideTypeFrameDropDownType);
+end
+
+function FixEPGPDropdown_OnShow()
+  UIDropDownMenu_Initialize(FixSelectDropdown, FixSelect_InitializeDropdown)
+  UIDropDownMenu_SetWidth(80, FixSelectDropdown)
 end
 
 function CreateCloseButton(frame)
@@ -475,8 +561,8 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
-  frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..PlayerGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID") end)
   
   frame.LM = CreateLMButton(frame)
   
@@ -556,7 +642,13 @@ local function PullPrices(itemID)
 
 end
 
-
+local function CheckGP()
+  if PlayerGP < MinGP then
+    ActiveGP = MinGP
+  else
+    ActiveGP = PlayerGP
+  end
+end
 
 -- Function to return colored text based on item quality
 local function GetColoredTextByQuality(text, qualityIndex)
@@ -618,10 +710,11 @@ local function ShowFrame(frame,duration,item)
       times = 5
     end
   end)
-  Ratio = PlayerEP/PlayerGP
+  CheckGP()
+  Ratio = PlayerEP/ActiveGP
   Ratio = string.format("%.2f", Ratio)
   itemRollFrame.EP:SetText("EP: " ..PlayerEP)
-  itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+  itemRollFrame.GP:SetText("GP: " ..ActiveGP)
   itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   if masterLooter == UnitName("player") and RaidEPGP == 1 then 
     itemRollFrame.LM:Show()
@@ -681,6 +774,20 @@ local function updateAwardee()
     Awardee:SetText("None")
   end
 end
+
+function FixEPGP()
+  if GetRankOfRollerI(UnitName("player")) <= 2 or UnitName("player") == "Gweneira" or UnitName("player") == "Inoreida" then
+    if FixEPGPFrame:IsVisible() then
+      FixEPGPFrame:Hide()
+    else
+      FixEPGPFrame:Show()
+      FixEPGPDropdown_OnShow()
+    end
+  else
+    lb_print("You do not have permission to adjust EP/GP values.")
+  end
+end
+
 function AwardConfirmation()
   Confirmation:SetText(itemRollFrame.name:GetText() .. "\n going to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
   if AwardSent ~= 1 then
@@ -814,6 +921,26 @@ function UpdateLMScrollFrame()
   end
 end
 
+function UpdateImportScrollFrame()
+  local length = getn(ImportEPGP)
+  local offset = FauxScrollFrame_GetOffset(ImportScrollFrame)
+  
+  FauxScrollFrame_Update(ImportScrollFrame, length, 16, 20)
+  
+  for i = 1, 16 do
+    local rowIndex = offset + i;
+    local rowFrame = _G["ImportScrollFrame" .. i];
+    local ImportData = ImportEPGP[rowIndex]
+    if rowFrame then
+      rowFrame:Show()
+      _G[rowFrame:GetName() .. "Column1"]:SetText(ImportData[1]);
+      _G[rowFrame:GetName() .. "Column2"]:SetText(ImportData[2]);
+      _G[rowFrame:GetName() .. "Column3"]:SetText(ImportData[3]);
+      _G[rowFrame:GetName() .. "Column4"]:SetText(ImportData[4]);
+    end
+  end
+end
+
 local function ExtractItemLinksFromMessage(message)
   local itemLinks = {}
   -- This pattern matches the standard item link structure in WoW
@@ -821,6 +948,13 @@ local function ExtractItemLinksFromMessage(message)
     table.insert(itemLinks, link)
   end
   return itemLinks
+end
+
+function ImportBroadcast()
+  lb_print("Broadcasting import data to raid...")
+  for i, v in ipairs(ImportEPGP) do
+    SendAddonMessage(LB_PREFIX, LB_EPGPSET .. " -" ..v[1].. "- +" ..v[2].. "+ *" ..v[3].. "* ", "RAID")
+  end
 end
 
 local function swapButtons()
@@ -916,13 +1050,28 @@ end
 
 function LM_OnLoad()
   LootMasterFrame:RegisterForDrag("LeftButton")
-
+  UIDropDownMenu_SetWidth(120, OverideFrameDropDownType)
+  UIDropDownMenu_SetWidth(50, OverideTypeFrameDropDownType)
   for i = 1, NUM_DISPLAY_ROWS do
     local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
     if i == 1 then
       rowFrame:SetPoint("TOPLEFT", LootMasterScrollFrame, "TOPLEFT", 2, -5);
     else
       rowFrame:SetPoint("TOPLEFT", _G["LMScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
+    end
+    --rowFrame:Hide()
+  end
+end
+
+function LMImport_OnLoad()
+  ImportFrame:RegisterForDrag("LeftButton")
+
+  for i = 1, 16 do
+    local rowFrame = CreateFrame("Button", "ImportScrollFrame" .. i, ImportScrollFrame, "ImportScrollEntryTemplate");
+    if i == 1 then
+      rowFrame:SetPoint("TOPLEFT", ImportScrollFrame, "TOPLEFT", 2, -5);
+    else
+      rowFrame:SetPoint("TOPLEFT", _G["ImportScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
     end
     --rowFrame:Hide()
   end
@@ -939,6 +1088,12 @@ end
 function LM_StartMoving()
 	
 	LootMasterFrame:StartMoving();
+	
+end
+
+function LMImport_StartMoving()
+	
+	ImportFrame:StartMoving();
 	
 end
 
@@ -1026,7 +1181,7 @@ local function HandleChatMessage(event, message, sender)
     if FrameShownDuration == nil then FrameShownDuration = 15 end
     if FrameAutoClose == nil then FrameAutoClose = true end
     if PlayerEP == nil then PlayerEP = 100 end
-    if PlayerGP == nil then PlayerGP = 100 end
+    if PlayerGP == nil then PlayerGP = 0 end
     
     if IsSenderMasterLooter(UnitName("player")) then
       SendAddonMessage(LB_PREFIX, LB_SET_ML .. UnitName("player"), "RAID")
@@ -1069,6 +1224,28 @@ local function HandleChatMessage(event, message, sender)
         lb_print("Roll time set to " .. FrameShownDuration .. " seconds.")
       end
     end
+
+    if string.find(message, LB_EPGPSET) then
+      local msg
+      local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,ep = string.find(message, "+(%d*%.?%d+)+")
+      local _,_,gp = string.find(message, "*(%d*%.?%d+)*")
+      msg = { player = player, ep = tonumber(ep), gp = tonumber(gp) }
+      if player == UnitName("player") then
+        PlayerEP = tonumber(ep)
+        PlayerGP = tonumber(gp)
+        CheckGP()
+        Ratio = PlayerEP/ActiveGP
+        Ratio = string.format("%.2f", Ratio)
+        itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+        lb_print("Your EP has been set to: " .. PlayerEP)
+        itemRollFrame.GP:SetText("GP: " ..ActiveGP)
+        lb_print("Your GP has been set to: " .. ActiveGP)
+        itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        lb_print("Your Priority has been set to: " .. Ratio)
+      end
+    end
+
     --EPGP Communication--
     if string.find(message, LB_BID) then
       local msg
@@ -1094,7 +1271,7 @@ local function HandleChatMessage(event, message, sender)
       end
       
     end
-
+    
     if string.find(message, LB_AWARD) then
       local msg
       local _,_,player = string.find(message, "-(%S+)-")
@@ -1102,9 +1279,10 @@ local function HandleChatMessage(event, message, sender)
       lb_print("Item awarded to: " .. player .. " for " .. price)
       if player == UnitName("player") then
         PlayerGP = PlayerGP + tonumber(price)
-        Ratio = PlayerEP/PlayerGP
+        CheckGP()
+        Ratio = PlayerEP/ActiveGP
         Ratio = string.format("%.2f", Ratio)
-        itemRollFrame.GP:SetText("GP: " ..PlayerGP)
+        itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         
       end
@@ -1146,8 +1324,6 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     end
   elseif msg == "help" then
     lb_print("LootBlare is a simple addon that displays and sort item rolls in a frame.")
-    lb_print("Type /lb EP <your EP> to set your EP within the addon")
-    lb_print("Type /lb GP <your GP> to set your GP within the addon")
     lb_print("Type /lb check to print your current EP")
     lb_print("Type /lb time <seconds> to set the duration the frame is shown. This value will be automatically set by the master looter after the first rolls.")
     lb_print("Type /lb autoClose on/off to enable/disable auto closing the frame after the time has elapsed.")
@@ -1180,35 +1356,54 @@ SlashCmdList["LOOTBLARE"] = function(msg)
       lb_print("Invalid option. Please enter 'on' or 'off'.")
     end
   elseif string.find(msg, "ep") then
-    local _,_,newEP = string.find(msg, "ep (%d*%.?%d+)")
-    newEP = tonumber(newEP)
-    if newEP == nil then
-      newEP = PlayerEP
+    if UnitName("player") == "Gweneira" then
+      local _,_,newEP = string.find(msg, "ep (%d*%.?%d+)")
+      newEP = tonumber(newEP)
+      if newEP == nil then
+        newEP = PlayerEP
+      end
+      PlayerEP = newEP
+      CheckGP()
+      Ratio = PlayerEP/ActiveGP
+      Ratio = string.format("%.2f", Ratio)
+      lb_print("Your EP has been set to " ..PlayerEP)
+      itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+      itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+    else
+      lb_print("Warning: Setting EP is deprecated and only exists for testing purposes.")
     end
-    PlayerEP = newEP
-    Ratio = PlayerEP/PlayerGP
-    Ratio = string.format("%.2f", Ratio)
-    lb_print("Your EP has been set to " ..PlayerEP)
-    itemRollFrame.EP:SetText("EP: " ..PlayerEP)
-    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   elseif string.find(msg, "gp") then
-    local _,_,newGP = string.find(msg, "gp (%d*%.?%d+)")
-    newGP = tonumber(newGP)
-    if newGP == nil then
-      newGP = PlayerGP
+    if UnitName("player") == "Gweneira" then
+      local _,_,newGP = string.find(msg, "gp (%d*%.?%d+)")
+      newGP = tonumber(newGP)
+      if newGP == nil then
+        newGP = PlayerGP
+      end
+      PlayerGP = newGP
+      CheckGP()
+      lb_print("Your GP has been set to " ..ActiveGP)
+      Ratio = PlayerEP/ActiveGP
+      Ratio = string.format("%.2f", Ratio)
+      itemRollFrame.GP:SetText("GP: " ..ActiveGP)
+      itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+    else
+      lb_print("This command has been deprecated, only existing for testing purposes.")
     end
-    PlayerGP = newGP
-    lb_print("Your GP has been set to " ..PlayerGP)
-    Ratio = PlayerEP/PlayerGP
-    Ratio = string.format("%.2f", Ratio)
-    itemRollFrame.GP:SetText("GP: " ..PlayerGP)
-    itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
   elseif string.find(msg, "check") then
     lb_print("Your current EP is set to: " ..PlayerEP)
-    lb_print("Your current GP is set to: " ..PlayerGP)
+    lb_print("Your current Real GP is set to: " ..PlayerGP)
+    lb_print("Your current Effective GP is set to: " ..ActiveGP)
     lb_print("Your current priority is: " ..Ratio)
   elseif string.find(msg, "kiddos") then
     kiddos()
+  elseif string.find(msg, "import") then
+    ranki = GetRankOfRollerI(UnitName("player"))
+    if ranki <= 2 or (UnitName("player") == "Gweneira")then
+      ImportFrame:Show()
+
+    else
+      lb_print("You do not have permission to import EPGP data.")
+    end
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end

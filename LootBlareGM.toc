@@ -1,12 +1,12 @@
 ## Interface: 11200
 ## Title: LootBlare GM Edition 2.0.2
 ## Author: Ehawne, Sivent, Gulolio, Arcangel
-## Version: 2.0.1
+## Version: 2.1.0
 ## Notes: Make loot rolls obvious
 ## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP, PlayerGP, GuildEPGP
 
 Database\Kara40.lua
-Database\GoldenMoonStarter.lua
+Database\GoldenMoon.lua
 
 EPGPInterface.lua
 LootBlareGM.lua
