@@ -66,6 +66,53 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
         
     </Frame>
 
+	<Frame name="ImportScrollEntryTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="400" y="20"/>
+        </Size>
+		
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="$parentColumn1" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-172" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn2" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn1">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn3" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn2">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentColumn4" inherits="GameFontNormalSmall" text="|">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parentColumn3">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+        
+    </Frame>
 
 	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM">
         <Size>
@@ -190,7 +237,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 							<Anchors>
 								<Anchor point="LEFT" relativePoint="LEFT">
 									<Offset>
-										<AbsDimension x="27" y="2"/>
+										<AbsDimension x="35" y="2"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -215,7 +262,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 							<Anchors>
 								<Anchor point="LEFT" relativePoint="LEFT">
 									<Offset>
-										<AbsDimension x="27" y="2"/>
+										<AbsDimension x="35" y="2"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -233,6 +280,23 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					UIDropDownMenu_Initialize(self, Override_InitializeDropdown)
 				</OnLoad>
 			</Button>
+			<Button name="FixButton" inherits="UIPanelButtonTemplate2" text="Fix EP/GP" >
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						FixEPGP()
+					</OnClick>
+				</Scripts>
+		    </Button>
 			<ScrollFrame name="LootMasterScrollFrame" parent="LootMasterFrame" inherits="FauxScrollFrameTemplate">
     			<Anchors>
         			<Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="TOPLEFT">
@@ -325,6 +389,298 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 						<Anchor point="CENTER" relativeTo="AwardConfirm" relativePoint="CENTER">
 							<Offset>
 								<AbsDimension x="0" y="15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="ImportFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
+		<Size>
+            <AbsDimension x="400" y="470" />
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER">
+                <Offset>
+                    <AbsDimension x="-50" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+            <BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+            <BorderColor r="0.6" g="0.6" b="0.6"/>
+            <Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+        </Backdrop>
+		<Scripts>
+            <OnLoad>
+                LMImport_OnLoad();
+            </OnLoad>
+            <OnHide>
+				LootMasterFrame:StopMovingOrSizing();
+			</OnHide>
+			<OnDragStart>
+				if(arg1 == "LeftButton") then
+					LMImport_StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				ImportFrame:StopMovingOrSizing();
+			</OnDragStop>
+			<OnMouseUp>
+				ImportFrame:StopMovingOrSizing();
+			</OnMouseUp>
+        </Scripts>
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="Column 1i Header" inherits="GameFontNormalSmall" text="Player">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-140" y="215"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 2i Header" inherits="GameFontNormalSmall" text="EP">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 1i Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 3i Header" inherits="GameFontNormalSmall" text="GP">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 2i Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Column 4i Header" inherits="GameFontNormalSmall" text="Priority">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 3i Header">
+							<Offset>
+								<AbsDimension x="80" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="ImportFrameCloseButton" inherits="UIPanelCloseButton" >
+			    <Anchors>
+				    <Anchor point="TOPRIGHT" relativeTo="ImportFrame" relativePoint="TOPRIGHT">
+					    <Offset>
+				    	    <AbsDimension x="0" y="-2"/>
+					    </Offset>
+				    </Anchor>
+			    </Anchors>
+		    </Button>
+			<ScrollFrame name="ImportScrollFrame" parent="ImportFrame" inherits="FauxScrollFrameTemplate">
+    			<Anchors>
+        			<Anchor point="TOPLEFT" relativeTo="ImportFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="30" y="-30"/>
+						</Offset>
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT" relativeTo="ImportFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-30" y="50"/>
+						</Offset>
+					</Anchor>
+    			</Anchors>
+    			<Scripts>
+    	    		<OnVerticalScroll>
+    	        		FauxScrollFrame_OnVerticalScroll(20, UpdateImportScrollFrame);
+    	    		</OnVerticalScroll>
+    	    		<OnShow>
+						UpdateImportScrollFrame();
+    	    		</OnShow>
+    			</Scripts>
+			</ScrollFrame>
+			<Button name="Broadcast" inherits="UIPanelButtonTemplate2" text="Broadcast">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="ImportFrame" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="30" y="15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="60" y="32"/>
+				</Size>
+				<Scripts>
+					<OnClick>
+							ImportBroadcast()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	<Frame name="FixEPGPFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="LootMasterFrame" hidden="true" frameStrata="HIGH">
+		<Size>
+			<AbsDimension x="400" y="70"/>
+		</Size>
+		<Anchors>
+            <Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="5" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+            <BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+            <BorderColor r="0.6" g="0.6" b="0.6"/>
+            <Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+        </Backdrop>
+		<Frames>
+			<Button name="SetEPGPButton" inherits="UIPanelButtonTemplate2" text="Set EP/GP">
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="FixEPGPFrame" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Scripts>
+					<OnClick>
+							SendEPGPValues()
+					</OnClick>
+				</Scripts>
+
+			</Button>
+
+			<Button name="FixSelectDropdown" inherits="UIDropDownMenuTemplate">
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="SelectedRaider" inherits="GameFontNormalSmall"  text="Select Raider">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="FixSelectDropdown" relativePoint="LEFT">
+									<Offset>
+										<AbsDimension x="25" y="2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="FixEPGPFrame" relativePoint="LEFT">
+						<Offset>
+							<AbsDimension x="-5" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<OnLoad>
+					UIDropDownMenu_Initialize(self, FixSelect_InitializeDropdown)
+				</OnLoad>
+			</Button>
+			<Button name="FixButton" inherits="UIPanelButtonTemplate2" text="Fix EP/GP" >
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						FixEPGP()
+					</OnClick>
+				</Scripts>
+		    </Button>
+			<EditBox name="FixEPBox" inherits="InputBoxTemplate" autoFocus="false" >
+				<Size>
+					<AbsDimension x="80" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="FixSelectDropdown" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="3"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnterPressed>
+						UpdateFixes()
+					</OnEnterPressed>
+						
+				</Scripts>
+
+			</EditBox>
+			<EditBox name="FixGPBox" inherits="InputBoxTemplate" autoFocus="false" >
+				<Size>
+					<AbsDimension x="80" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="FixEPBox" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="10" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnterPressed>
+						UpdateFixes()
+					</OnEnterPressed>
+				</Scripts>
+			</EditBox>
+		</Frames>
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="FixEPLabel" inherits="GameFontNormalSmall"  text="EP:">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="-80" y="20"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="FixGPLabel" inherits="GameFontNormalSmall"  text="GP:">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="10" y="20"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="FixRatioLabel" inherits="GameFontNormalSmall"  text="Ratio:">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="100" y="20"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="FixRatio" inherits="GameFontNormalSmall"  text="1.00">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="100" y="2"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
