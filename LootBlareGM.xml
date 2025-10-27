@@ -114,7 +114,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
         
     </Frame>
 
-	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
+	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM">
         <Size>
             <AbsDimension x="400" y="400" />
         </Size>
@@ -322,7 +322,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
         </Frames>
     </Frame>
 
-	<Frame name="AwardConfirm" toplevel="true enable" enableMouse="true" parent="UIParent" hidden="true">
+	<Frame name="AwardConfirm" toplevel="true enable" enableMouse="true" parent="UIParent" hidden="true" frameStrata="HIGH">
 		<Size>
 			<AbsDimension x="180" y="70"/>
 		</Size>
