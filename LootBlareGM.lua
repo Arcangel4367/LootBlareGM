@@ -4,6 +4,7 @@ local MSSRRollMessages = {}
 local MSRollMessages = {}
 local OSSRRollMessages = {}
 local OSRollMessages = {}
+local tmogSRRollMessages = {}
 local tmogRollMessages = {}
 local EPGPMSRollMessages = {}
 local EPGPOSRollMessages = {}
@@ -18,6 +19,7 @@ local MSSRRollCap = 101
 local MSRollCap = 100
 local OSSRRollCap = 99
 local OSRollCap = 98
+local tmogSRRollCap = 51
 local tmogRollCap = 50
 
 
@@ -27,7 +29,7 @@ local CurrentSelection
 local FixSelected
 local RaidEPGP = 0
 local MinGP = 100
-local TestZone = 1
+local TestZone = 0
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -55,10 +57,11 @@ local RAID_CLASS_COLORS = {
 
 local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
-local MSSR_Text_Color = "FFFF00FF"
+local MSSR_Text_Color = "FFFF0080"
 local MS_Text_Color = "FFFFFF00"
 local OSSR_TEXT_COLOR = "FF776CDA"
 local OS_TEXT_COLOR = "FFEC9512"
+local TMSR_TEXT_COLOR = "FFAF40AF"
 local TM_TEXT_COLOR = "FF00FFFF"
 
 local CORE_TEXT_COLOR = "FFFF00FF"
@@ -86,6 +89,7 @@ local function resetRolls()
   MSRollMessages = {}
   OSSRRollMessages = {}
   OSRollMessages = {}
+  tmogSRRollMessages = {}
   tmogRollMessages = {}
   rollers = {}
   EPGPMSRollMessages = {}
@@ -113,6 +117,9 @@ local function sortRolls()
   table.sort(OSRollMessages, function(a, b)
     return a.roll > b.roll
   end)
+  table.sort(tmogSRRollMessages, function(a, b)
+    return a.roll > b.roll
+  end)
   table.sort(tmogRollMessages, function(a, b)
     return a.roll > b.roll
   end)
@@ -134,6 +141,8 @@ local function colorMsg(message)
     textColor = OSSR_TEXT_COLOR
   elseif string.find(msg, "-"..OSRollCap) then
     textColor = OS_TEXT_COLOR
+  elseif string.find(msg, "-"..tmogSRRollCap) then
+    textColor = TMSR_TEXT_COLOR
   elseif string.find(msg, "-"..tmogRollCap) then
     textColor = TM_TEXT_COLOR
   end
@@ -863,6 +872,13 @@ local function UpdateTextArea(frame)
     text = text .. colorMsg(v) .. "\n"
     count = count + 1
   end
+  for i, v in ipairs(tmogSRRollMessages) do
+    local count = 0
+    if count >= 30 then break end
+    colored_msg = v.msg
+    text = text .. colorMsg(v) .. "\n"
+    count = count + 1
+  end
   for i, v in ipairs(tmogRollMessages) do
     local count = 0
     if count >= 30 then break end
@@ -963,7 +979,7 @@ local function swapButtons()
     itemRollFrame.MS:Hide()
     itemRollFrame.OSSR:Hide()
     itemRollFrame.OS:Hide()
-    itemRollFrame.TM:Hide()
+    --itemRollFrame.TM:Hide()
     itemRollFrame.BidMS:Show()
     itemRollFrame.BidOS:Show()
     itemRollFrame.EPGPl1:Show()
@@ -976,7 +992,7 @@ local function swapButtons()
     itemRollFrame.MS:Show()
     itemRollFrame.OSSR:Show()
     itemRollFrame.OS:Show()
-    itemRollFrame.TM:Show()
+    --itemRollFrame.TM:Show()
     itemRollFrame.BidMS:Hide()
     itemRollFrame.BidOS:Hide()
     itemRollFrame.EPGPl1:Hide()
@@ -1107,6 +1123,8 @@ local function RollCheck(maxRoll, message)
     table.insert(OSSRRollMessages, message)
   elseif maxRoll == tostring(OSRollCap) then
     table.insert(OSRollMessages, message)
+  elseif maxRoll == tostring(tmogSRRollCap) then
+    table.insert(tmogSRRollMessages, message)
   elseif maxRoll == tostring(tmogRollCap) then
     table.insert(tmogRollMessages, message)
   end  
