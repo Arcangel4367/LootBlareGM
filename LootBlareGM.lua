@@ -248,6 +248,7 @@ function OverrideType_InitializeDropDown()
     end
   }
   UIDropDownMenu_AddButton(MS)
+
   local OS = UIDropDownMenu_CreateInfo()
   OS = {
     text = "OS",
@@ -333,6 +334,11 @@ function UpdateFixes()
   FixGPBox:ClearFocus()
   FixSelected.ep = tonumber(FixEPBox:GetText())
   FixSelected.gp = tonumber(FixGPBox:GetText())
+  if FixSelected.gp < 100 then
+    FixSelected.activegp = 100
+  else
+    FixSelected.activegp = FixSelected.gp
+  end
   FixRatio:SetText(string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
 end
 
@@ -340,7 +346,7 @@ function SendEPGPValues()
   UpdateFixes()
   if FixSelected ~= nil then
     lb_print("Sending EPGP values for " ..FixSelected.player.. ": EP: " ..FixSelected.ep.. ", GP: " ..FixSelected.gp.. ", Ratio: " ..string.format("%.2f", (FixSelected.ep / FixSelected.activegp)))
-    SendAddonMessage(LB_PREFIX,LB_EPGPSET.. " -" ..FixSelected.player.. "- +" ..FixSelected.ep.."+ *"..FixSelected.gp.."* ", "RAID")
+    SendAddonMessage(LB_PREFIX,LB_EPGPSET.. " =" .. UnitName("player") .. "= [Fix] -" ..FixSelected.player.. "- +" ..FixSelected.ep.."+ *"..FixSelected.gp.."* ", "RAID")
   end
 end
 
@@ -388,7 +394,7 @@ end
 
 function OverrideFrameDropDownType_OnShow()
   UIDropDownMenu_Initialize(OverideFrameDropDownType, Override_InitializeDropdown)
-  UIDropDownMenu_Initialize(OverideTypeFrameDropDownType, OverrideType_InitializeDropDown)
+  UIDropDownMenu_Initialize(OverideRollTypeFrameDropDownType, OverrideType_InitializeDropDown)
 end
 
 function FixEPGPDropdown_OnShow()
@@ -798,7 +804,7 @@ function FixEPGP()
 end
 
 function AwardConfirmation()
-  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n going to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n Award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
   if AwardSent ~= 1 then
     AwardConfirm:Show()
   end
@@ -813,7 +819,7 @@ function AwardSend()
   if AwardSent ~= 1 then
     AwardSent = 1
     --lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
-    SendAddonMessage(LB_PREFIX, LB_AWARD .. "-" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    SendAddonMessage(LB_PREFIX, LB_AWARD .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
   end
   AwardConfirm:Hide()
 end
@@ -969,7 +975,7 @@ end
 function ImportBroadcast()
   lb_print("Broadcasting import data to raid...")
   for i, v in ipairs(ImportEPGP) do
-    SendAddonMessage(LB_PREFIX, LB_EPGPSET .. " -" ..v[1].. "- +" ..v[2].. "+ *" ..v[3].. "* ", "RAID")
+    SendAddonMessage(LB_PREFIX, LB_EPGPSET .. " =" .. UnitName("player") .. "= [Broadcast] -" ..v[1].. "- +" ..v[2].. "+ *" ..v[3].. "* ", "RAID")
   end
 end
 
@@ -1067,7 +1073,7 @@ end
 function LM_OnLoad()
   LootMasterFrame:RegisterForDrag("LeftButton")
   UIDropDownMenu_SetWidth(120, OverideFrameDropDownType)
-  UIDropDownMenu_SetWidth(50, OverideTypeFrameDropDownType)
+  UIDropDownMenu_SetWidth(50, OverideRollTypeFrameDropDownType)
   for i = 1, NUM_DISPLAY_ROWS do
     local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
     if i == 1 then
@@ -1200,6 +1206,15 @@ local function HandleChatMessage(event, message, sender)
     if FrameAutoClose == nil then FrameAutoClose = true end
     if PlayerEP == nil then PlayerEP = 100 end
     if PlayerGP == nil then PlayerGP = 0 end
+    if EPGPLog == nil then   
+    EPGPLog = {} 
+    elseif getn(EPGPLog) > 20  then
+      lb_print("EPGP Log exceeded limit, trimming old entries.")
+      for i = getn(EPGPLog), 21, -1 do
+        table.remove(EPGPLog, i)
+      end
+    end
+
     CheckGP()
     Ratio = string.format("%.2f", PlayerEP/ActiveGP)
     if IsSenderMasterLooter(UnitName("player")) then
@@ -1245,11 +1260,13 @@ local function HandleChatMessage(event, message, sender)
     end
 
     if string.find(message, LB_EPGPSET) then
-      local msg
+
+      local _,_,sender = string.find(message, "=(%S+)=")
       local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,type = string.find(message, "%[(%a+)%]")
       local _,_,ep = string.find(message, "+(%d*%.?%d+)+")
       local _,_,gp = string.find(message, "*(%d*%.?%d+)*")
-      msg = { player = player, ep = tonumber(ep), gp = tonumber(gp) }
+      
       if player == UnitName("player") then
         PlayerEP = tonumber(ep)
         PlayerGP = tonumber(gp)
@@ -1263,6 +1280,7 @@ local function HandleChatMessage(event, message, sender)
         lb_print("Your Effective GP has been set to: " .. ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         lb_print("Your Priority has been set to: " .. Ratio)
+        table.insert(EPGPLog, 1, { sender = sender, time = date("%Y-%m-%d %H:%M:%S"), type = type ,ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
       end
     end
 
@@ -1293,7 +1311,8 @@ local function HandleChatMessage(event, message, sender)
     end
     
     if string.find(message, LB_AWARD) then
-      local msg
+      
+      local _,_,sender = string.find(message, "=(%S+)=")
       local _,_,player = string.find(message, "-(%S+)-")
       local _,_,price = string.find(message, "+(%d*%.?%d+)+")
       lb_print("Item awarded to: " .. player .. " for " .. price)
@@ -1304,6 +1323,7 @@ local function HandleChatMessage(event, message, sender)
         Ratio = string.format("%.2f", Ratio)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        table.insert(EPGPLog, 1, { sender = sender, time = date("%Y-%m-%d %H:%M:%S"), type = "Award", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
         
       end
     end
@@ -1348,6 +1368,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     lb_print("Type /lb time <seconds> to set the duration the frame is shown. This value will be automatically set by the master looter after the first rolls.")
     lb_print("Type /lb autoClose on/off to enable/disable auto closing the frame after the time has elapsed.")
     lb_print("Type /lb settings to see the current settings.")
+    lb_print("Type /lb log to see the last 20 changes to your EPGP values.")
   elseif msg == "settings" then
     lb_print("Frame shown duration: " .. FrameShownDuration .. " seconds.")
     lb_print("Auto closing: " .. (FrameAutoClose and "on" or "off"))
@@ -1423,6 +1444,16 @@ SlashCmdList["LOOTBLARE"] = function(msg)
 
     else
       lb_print("You do not have permission to import EPGP data.")
+    end
+  elseif string.find(msg, "log") then
+    lb_print("EPGP Change Log:")
+    for i = 20, 1, -1 do
+      local v= EPGPLog[i]
+      if v == nil then 
+      lb_print("End of log.")
+      break 
+      end
+      lb_print(v.time .. " |cFF00FF00" .. v.sender .. "|r set your " .. v.type .. " to EP: " .. v.ep .. ", GP: " .. v.gp .. ", Priority: " .. v.ratio)
     end
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")

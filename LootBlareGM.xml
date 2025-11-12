@@ -230,7 +230,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 		    </Button>
-			<Button name="OverideTypeFrameDropDownType" inherits="UIDropDownMenuTemplate">
+			<Button name="OverideRollTypeFrameDropDownType" inherits="UIDropDownMenuTemplate">
 				<Layers>
 					<Layer level="FOREGROUND">
 						<FontString name="AwardType" inherits="GameFontNormalSmall"  text="Type">
