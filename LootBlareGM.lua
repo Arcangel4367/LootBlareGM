@@ -1261,7 +1261,6 @@ local function HandleChatMessage(event, message, sender)
 
     if string.find(message, LB_EPGPSET) then
 
-      local _,_,sender = string.find(message, "=(%S+)=")
       local _,_,player = string.find(message, "-(%S+)-")
       local _,_,type = string.find(message, "%[(%a+)%]")
       local _,_,ep = string.find(message, "+(%d*%.?%d+)+")
@@ -1274,20 +1273,21 @@ local function HandleChatMessage(event, message, sender)
         Ratio = PlayerEP/ActiveGP
         Ratio = string.format("%.2f", Ratio)
         itemRollFrame.EP:SetText("EP: " ..PlayerEP)
+        lb_print(arg4 .. "is broadcasting EP/GP data.")
         lb_print("Your EP has been set to: " .. PlayerEP)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         lb_print("Your Real GP has been set to: " .. PlayerGP)
         lb_print("Your Effective GP has been set to: " .. ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         lb_print("Your Priority has been set to: " .. Ratio)
-        table.insert(EPGPLog, 1, { sender = sender, time = date("%Y-%m-%d %H:%M:%S"), type = type ,ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
+        table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = type ,ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
       end
     end
 
     --EPGP Communication--
     if string.find(message, LB_BID) then
       local msg
-      local _,_,player = string.find(message, "Player: (%S+)")
+      local player = arg4
       local _,_,type = string.find(message, "-(%u+)-")
       local _,_,effort = string.find(message, "+(%d*%.?%d+)+")
       local _,_,gear = string.find(message, "*(%d*%.?%d+)*")
@@ -1312,7 +1312,6 @@ local function HandleChatMessage(event, message, sender)
     
     if string.find(message, LB_AWARD) then
       
-      local _,_,sender = string.find(message, "=(%S+)=")
       local _,_,player = string.find(message, "-(%S+)-")
       local _,_,price = string.find(message, "+(%d*%.?%d+)+")
       lb_print("Item awarded to: " .. player .. " for " .. price)
@@ -1323,7 +1322,7 @@ local function HandleChatMessage(event, message, sender)
         Ratio = string.format("%.2f", Ratio)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
-        table.insert(EPGPLog, 1, { sender = sender, time = date("%Y-%m-%d %H:%M:%S"), type = "Award", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
+        table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = "Award", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
         
       end
     end
@@ -1438,7 +1437,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
   elseif string.find(msg, "kiddos") then
     kiddos()
   elseif string.find(msg, "import") then
-    ranki = GetRankOfRollerI(UnitName("player"))
+    local ranki = GetRankOfRollerI(UnitName("player"))
     if ranki <= 2 or (UnitName("player") == "Gweneira")then
       ImportFrame:Show()
 
@@ -1448,13 +1447,11 @@ SlashCmdList["LOOTBLARE"] = function(msg)
   elseif string.find(msg, "log") then
     lb_print("EPGP Change Log:")
     for i = 20, 1, -1 do
-      local v= EPGPLog[i]
-      if v == nil then 
-      lb_print("End of log.")
-      break 
+      if EPGPLog[i] ~= nil then 
+        lb_print(EPGPLog[i].time .. " |cFF00FF00" .. EPGPLog[i].sender .. "|r set your " .. EPGPLog[i].type .. " to EP: " .. EPGPLog[i].ep .. ", GP: " .. EPGPLog[i].gp .. ", Priority: " .. EPGPLog[i].ratio)
       end
-      lb_print(v.time .. " |cFF00FF00" .. v.sender .. "|r set your " .. v.type .. " to EP: " .. v.ep .. ", GP: " .. v.gp .. ", Priority: " .. v.ratio)
     end
+    lb_print("End of log.")
   else
   lb_print("Invalid command. Type /lb help for a list of commands.")
   end
