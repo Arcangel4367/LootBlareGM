@@ -1273,7 +1273,7 @@ local function HandleChatMessage(event, message, sender)
         Ratio = PlayerEP/ActiveGP
         Ratio = string.format("%.2f", Ratio)
         itemRollFrame.EP:SetText("EP: " ..PlayerEP)
-        lb_print(arg4 .. "is broadcasting EP/GP data.")
+        lb_print(arg4 .. " is broadcasting EP/GP data.")
         lb_print("Your EP has been set to: " .. PlayerEP)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         lb_print("Your Real GP has been set to: " .. PlayerGP)
