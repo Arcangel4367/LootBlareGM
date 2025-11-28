@@ -518,6 +518,24 @@ local function CreateLMButton(frame)
   return button
 end
 
+local function MSBid()
+  if MSPrice == -1 then
+    RandomRoll(1,MSRollCap)
+  else
+    SendAddonMessage(LB_PREFIX,LB_BID.. " -MS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID")
+  end
+end
+
+
+local function OSBid()
+  if OSPrice == -1 then
+    RandomRoll(1,OSRollCap)
+  else
+    SendAddonMessage(LB_PREFIX,LB_BID.. " -OS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID")
+  end
+end
+
+
 local function CreateItemRollFrame()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
   
@@ -576,8 +594,8 @@ local function CreateItemRollFrame()
   frame.OS = CreateActionButton(frame, "OS", "Roll for OS", 4, function() RandomRoll(1,OSRollCap) end)
   frame.TM = CreateActionButton(frame, "TM", "Roll for Transmog", 5, function() RandomRoll(1,tmogRollCap) end)
   
-  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -MS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID") end)
-  frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() SendAddonMessage(LB_PREFIX,LB_BID.. "Player: " ..UnitName("player").. " -OS- +" ..PlayerEP.."+ *"..ActiveGP.."* =" ..Ratio.."= end", "RAID") end)
+  frame.BidMS = CreateActionButton(frame, "Bid MS", "Bid for MS", 1, function() MSBid() end)
+  frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() OSBid() end)
   
   frame.LM = CreateLMButton(frame)
   
@@ -651,8 +669,8 @@ local function PullPrices(itemID)
 		MSPrice = math.floor(data[2] + 0.5)
     OSPrice = math.floor(data[3] + 0.5)
   else
-    MSPrice = 0
-    OSPrice = 0
+    MSPrice = -1
+    OSPrice = -1
   end
 
 end
@@ -691,8 +709,12 @@ local function SetItemInfo(frame, itemLinkArg)
       local itemID = tonumber(idMatch)
       PullPrices(itemID)
     end
-
-    frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_TEXT_COLOR.."OS: " ..OSPrice.."|r")
+    if MSPrice == -1 or OSPrice == -1 then
+      frame.EPGPl2:SetText("Non-EPGP, Roll")
+    else
+      frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_TEXT_COLOR.."OS: " ..OSPrice.."|r")
+    end
+    
   end
   frame.icon:SetTexture(itemIcon)
   frame.iconButton:SetNormalTexture(itemIcon)  -- Sets the same texture as the icon
