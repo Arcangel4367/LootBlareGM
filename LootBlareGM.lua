@@ -57,12 +57,12 @@ local RAID_CLASS_COLORS = {
 
 local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
-local MSSR_Text_Color = "FFFF0080"
-local MS_Text_Color = "FFFFFF00"
-local OSSR_TEXT_COLOR = "FF776CDA"
-local OS_TEXT_COLOR = "FFEC9512"
-local TMSR_TEXT_COLOR = "FFAF40AF"
-local TM_TEXT_COLOR = "FF00FFFF"
+local DEFAULT_MSSR_Text_Color = "FFFF0080"
+local DEFAULT_MS_Text_Color = "FFFFFF00"
+local DEFAULT_OSSR_Text_Color = "FF776CDA"
+local DEFAULT_OS_Text_Color = "FFEC9512"
+local DEFAULT_TMSR_Text_Color = "FFAF40AF"
+local DEFAULT_TM_Text_Color = "FF00FFFF"
 
 local CORE_TEXT_COLOR = "FFFF00FF"
 local RAIDER_TEXT_COLOR = "FFFFFF00"
@@ -81,7 +81,7 @@ local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
 end
 
-NUM_DISPLAY_ROWS = 12
+--NUM_DISPLAY_ROWS = 12
 ScrollShow = nil
 
 local function resetRolls()
@@ -96,7 +96,17 @@ local function resetRolls()
   EPGPOSRollMessages = {}
 end
 
+local function CheckColors()
+  --Roll Colors
+  if MSSR_Text_Color == nil then MSSR_Text_Color = DEFAULT_MSSR_Text_Color end
+  if MS_Text_Color == nil then MS_Text_Color = DEFAULT_MS_Text_Color end
+  if OSSR_Text_Color == nil then OSSR_Text_Color = DEFAULT_OSSR_Text_Color end
+  if OS_Text_Color == nil then OS_Text_Color = DEFAULT_OS_Text_Color end
+  if TMSR_Text_Color == nil then TMSR_Text_Color = DEFAULT_TMSR_Text_Color end
+  if TM_Text_Color == nil then TM_Text_Color = DEFAULT_TM_Text_Color end
+  --Role Colors
 
+end
 
 local function sortRolls()
   table.sort(EPGPMSRollMessages, function(a, b)
@@ -138,13 +148,13 @@ local function colorMsg(message)
   elseif string.find(msg, "-"..MSRollCap) then
     textColor = MS_Text_Color
   elseif string.find(msg, "-"..OSSRRollCap) then
-    textColor = OSSR_TEXT_COLOR
+    textColor = OSSR_Text_Color
   elseif string.find(msg, "-"..OSRollCap) then
-    textColor = OS_TEXT_COLOR
+    textColor = OS_Text_Color
   elseif string.find(msg, "-"..tmogSRRollCap) then
-    textColor = TMSR_TEXT_COLOR
+    textColor = TMSR_Text_Color
   elseif string.find(msg, "-"..tmogRollCap) then
-    textColor = TM_TEXT_COLOR
+    textColor = TM_Text_Color
   end
   if message.rankI <= 4 then
     rankColor = CORE_TEXT_COLOR
@@ -169,7 +179,7 @@ local function colorEPGPMsg(message)
   if message.type == "MS" then
     textColor = MS_Text_Color
   elseif message.type == "OS" then
-    textColor = OS_TEXT_COLOR
+    textColor = OS_Text_Color
   end
   if message.rankI <= 4 then
     rankColor = CORE_TEXT_COLOR
@@ -518,6 +528,65 @@ local function CreateLMButton(frame)
   return button
 end
 
+local function CreateResizeButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(16)
+  button:SetHeight(16)
+  button:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+
+  local icon = button:CreateTexture(nil, "IMAGE")
+  icon:SetTexture("Interface\\AddOns\\LootBlareGM\\images\\ResizeGrip")
+  icon:SetAllPoints(button)
+
+  button:SetHighlightTexture("Interface\\AddOns\\LootBlareGM\\images\\ResizeGrip", "ADD")
+
+  button:SetScript("OnMouseDown", function(self)
+      
+      frame:StartSizing("BOTTOMRIGHT")
+  end)
+
+  button:SetScript("OnMouseUp", function(self)
+      
+      frame:StopMovingOrSizing()
+      LMScrollFrameResized()
+  end)
+
+  return button
+end
+
+local function CreateSettingsButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(16)
+  button:SetHeight(16)
+  button:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
+
+  local icon = button:CreateTexture(nil, "IMAGE")
+  icon:SetTexture("Interface\\GossipFrame\\BinderGossipIcon")
+  icon:SetAllPoints(button)
+
+  button:SetHighlightTexture("Interface\\GossipFrame\\BinderGossipIcon", "ADD")
+
+  button:SetScript("OnClick", function(self)
+      if LBSettingsFrame:IsVisible() then
+        LBSettingsFrame:Hide()
+      else
+        LBSettingsFrame:Show()
+      end
+  end)
+
+  button:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Open LootBlare Settings", nil, nil, nil, nil, true)
+      GameTooltip:Show()
+  end)
+
+  button:SetScript("OnLeave", function(self)
+      GameTooltip:Hide()
+  end)
+
+  return button
+end
+
 local function MSBid()
   if MSPrice == -1 then
     RandomRoll(1,MSRollCap)
@@ -537,11 +606,12 @@ end
 
 
 local function CreateItemRollFrame()
+  CheckColors()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
   
   frame:SetWidth(270)
-  
   frame:SetHeight(400)
+  frame:SetMinResize(270, 300)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
       bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -553,6 +623,9 @@ local function CreateItemRollFrame()
 
   frame:SetMovable(true)
   frame:EnableMouse(true)
+  frame:SetResizable(true)
+  frame:SetFrameLevel(10)
+  frame:SetFrameStrata("High")
 
   frame:RegisterForDrag("LeftButton") -- Only start dragging with the left mouse button
   frame:SetScript("OnDragStart", function () frame:StartMoving() end)
@@ -565,12 +638,12 @@ local function CreateItemRollFrame()
   local EP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   local GP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   local EPGPRatio = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
-  EPGPl1:SetPoint("RIGHT", frame, "RIGHT", -35, 175)
+  EPGPl1:SetPoint("RIGHT", frame, "TOP", 100, -25)
   EPGPl1:SetFont(FONT_NAME, 13)
   EPGPl2:SetPoint("LEFT", EPGPl1, "BOTTOMLEFT", 0, -10)
   EPGPl2:SetFont(FONT_NAME, 10)
   EPGPl1:SetText("EPGP Prices")
-  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_Text_Color.."OS: 0|r")
   EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
   EP:SetFont(FONT_NAME, 10)
   EP:SetText("EP:")
@@ -598,6 +671,9 @@ local function CreateItemRollFrame()
   frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() OSBid() end)
   
   frame.LM = CreateLMButton(frame)
+
+  frame.RS = CreateResizeButton(frame)
+  frame.set = CreateSettingsButton(frame)
   
   frame.BidMS:Hide()
   frame.BidOS:Hide()
@@ -712,7 +788,7 @@ local function SetItemInfo(frame, itemLinkArg)
     if MSPrice == -1 or OSPrice == -1 then
       frame.EPGPl2:SetText("Non-EPGP, Roll")
     else
-      frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_TEXT_COLOR.."OS: " ..OSPrice.."|r")
+      frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_Text_Color.."OS: " ..OSPrice.."|r")
     end
     
   end
@@ -771,8 +847,9 @@ local function CreateTextArea(frame)
   else
     textArea:SetFont("Fonts\\FRIZQT__.TTF", 11)
   end
-  textArea:SetHeight(300) -- Size of the icon
+  --textArea:SetHeight(300) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
+  textArea:SetPoint("BOTTOM", frame, "BOTTOM", 0, 50)
   textArea:SetJustifyH("LEFT")
   textArea:SetJustifyV("TOP")
 
@@ -924,20 +1001,20 @@ end
 function UpdateLMScrollFrame()
   local length
   local offset = 0
-  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > 12 then
+  --lb_print("Frame height:" .. LootMasterScrollFrame:GetHeight())
+  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > (NUM_DISPLAY_ROWS) then
     length = (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages))
     offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
     LootMasterScrollFrameScrollBar:Show()
     LootMasterScrollFrameScrollBarScrollUpButton:Show()
     LootMasterScrollFrameScrollBarScrollDownButton:Show()
   else
-    length = 13
+    length = NUM_DISPLAY_ROWS + 1
     LootMasterScrollFrameScrollBar:Hide()
     LootMasterScrollFrameScrollBarScrollUpButton:Hide()
     LootMasterScrollFrameScrollBarScrollDownButton:Hide()
   end
   FauxScrollFrame_Update(LootMasterScrollFrame, length, NUM_DISPLAY_ROWS, 20)
-  
   for i = 1, NUM_DISPLAY_ROWS do
     local rowIndex = offset + i;
     local rowFrame = _G["LMScrollFrame" .. i];
@@ -1096,14 +1173,15 @@ function LM_OnLoad()
   LootMasterFrame:RegisterForDrag("LeftButton")
   UIDropDownMenu_SetWidth(120, OverideFrameDropDownType)
   UIDropDownMenu_SetWidth(50, OverideRollTypeFrameDropDownType)
-  for i = 1, NUM_DISPLAY_ROWS do
+  LootMasterFrame:SetMinResize(400, 400)
+  for i = 1, 30 do
     local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
     if i == 1 then
       rowFrame:SetPoint("TOPLEFT", LootMasterScrollFrame, "TOPLEFT", 2, -5);
     else
       rowFrame:SetPoint("TOPLEFT", _G["LMScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
     end
-    --rowFrame:Hide()
+    rowFrame:Hide()
   end
 end
 
@@ -1121,6 +1199,33 @@ function LMImport_OnLoad()
   end
 end
 
+function LBSettings_OnLoad()
+  LBSettingsFrame:RegisterForDrag("LeftButton")
+end
+
+function ResetLBWindows()
+  LootMasterFrame:SetHeight(400)
+  LootMasterFrame:SetWidth(400)
+  LMScrollFrameResized()
+  itemRollFrame:SetHeight(400)
+  itemRollFrame:SetWidth(270)
+end
+
+function LMScrollFrameResized()
+  NUM_DISPLAY_ROWS = math.floor(LootMasterScrollFrame:GetHeight() / 22)
+  for i = 1, 30 do
+    local rowFrame = _G["LMScrollFrame" .. i];
+    if rowFrame then
+      if i <= NUM_DISPLAY_ROWS then
+        rowFrame:Show()
+      else
+        rowFrame:Hide()
+      end
+    end
+  end
+  UpdateLMScrollFrame()
+end
+
 function kiddos ()
     DEFAULT_CHAT_FRAME:AddMessage(GetMouseFocus():GetName())
     local kiddos = { GetMouseFocus():GetRegions() };
@@ -1133,6 +1238,12 @@ function LM_StartMoving()
 	
 	LootMasterFrame:StartMoving();
 	
+end
+
+function LMSettings_StartMoving()
+  
+  LBSettingsFrame:StartMoving();
+  
 end
 
 function LMImport_StartMoving()
@@ -1157,6 +1268,8 @@ local function RollCheck(maxRoll, message)
     table.insert(tmogRollMessages, message)
   end  
 end
+
+
 
 local function HandleChatMessage(event, message, sender)
   if (event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER") then
@@ -1228,6 +1341,8 @@ local function HandleChatMessage(event, message, sender)
     if FrameAutoClose == nil then FrameAutoClose = true end
     if PlayerEP == nil then PlayerEP = 100 end
     if PlayerGP == nil then PlayerGP = 0 end
+    if NUM_DISPLAY_ROWS == nil then NUM_DISPLAY_ROWS = 12 end
+    CheckColors()
     if EPGPLog == nil then   
     EPGPLog = {} 
     elseif getn(EPGPLog) > 20  then

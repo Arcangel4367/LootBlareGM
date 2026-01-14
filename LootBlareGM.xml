@@ -20,7 +20,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					<Anchors>
 						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
 							<Offset>
-								<AbsDimension x="-192" y="0"/>
+								<AbsDimension x="-175" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -114,7 +114,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
         
     </Frame>
 
-	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM">
+	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM" resizable="true">
         <Size>
             <AbsDimension x="400" y="400" />
         </Size>
@@ -139,9 +139,9 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 			<Layer level="FOREGROUND">
 				<FontString name="Column 1 Header" inherits="GameFontNormalSmall" text="Player">
 					<Anchors>
-						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+						<Anchor point="CENTER" relativePoint="TOPLEFT" relativeTo="$parent">
 							<Offset>
-								<AbsDimension x="-160" y="180"/>
+								<AbsDimension x="42" y="-25"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -301,15 +301,25 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
     			<Anchors>
         			<Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="TOPLEFT">
 						<Offset>
-							<AbsDimension x="30" y="-30"/>
+							<AbsDimension x="15" y="-30"/>
 						</Offset>
 					</Anchor>
 					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
 						<Offset>
-							<AbsDimension x="-30" y="70"/>
+							<AbsDimension x="-20" y="70"/>
 						</Offset>
 					</Anchor>
     			</Anchors>
+				<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+					<BackgroundInsets>
+						<AbsInset left="4" right="4" top="4" bottom="4"/>
+					</BackgroundInsets>
+					<EdgeSize>
+						<AbsValue val="16"/>
+					</EdgeSize>
+					<BorderColor r="0.6" g="0.6" b="0.6"/>
+					<Color r="0.0" g="0.0" b="0.0" a="0.0"/>
+				</Backdrop>
     			<Scripts>
     	    		<OnVerticalScroll>
     	        		FauxScrollFrame_OnVerticalScroll(20, UpdateLMScrollFrame);
@@ -319,6 +329,33 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
     	    		</OnShow>
     			</Scripts>
 			</ScrollFrame>
+			<Button name="LootMasterResizeButton" >
+                <NormalTexture file="Interface\AddOns\LootBlareGM\images\ResizeGrip"/>
+                <HighlightTexture file="Interface\AddOns\LootBlareGM\images\ResizeGrip" alphaMode="ADD"/>
+                <Size>
+                    <AbsDimension x="16" y="16"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnMouseDown>
+                        LootMasterFrame:StartSizing("BOTTOM")
+                        LootMasterFrame:SetUserPlaced(true)
+                        
+                    </OnMouseDown>
+                    <OnMouseUp>
+                        LootMasterFrame:StopMovingOrSizing()
+                        LMScrollFrameResized()
+                    </OnMouseUp>
+                    <OnClick>
+                    </OnClick>
+                </Scripts>
+            </Button>
         </Frames>
     </Frame>
 
@@ -687,5 +724,77 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				</FontString>
 			</Layer>
 		</Layers>
+	</Frame>
+	<Frame name="LBSettingsFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
+		<Size>
+			<AbsDimension x="400" y="300" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="-50" y="0" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BorderColor r="0.6" g="0.6" b="0.6"/>
+			<Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				LBSettings_OnLoad();
+			</OnLoad>
+			 <OnHide>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnHide>
+			<OnDragStart>
+				if(arg1 == "LeftButton") then
+					LMSettings_StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnDragStop>
+			<OnMouseUp>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnMouseUp>
+		</Scripts>
+		<Frames>
+			<Button name="LBSettingsCloseButton" inherits="UIPanelCloseButton" >
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="LBSettingsFrame" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="0" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+
+			
+
+			<Button name="LBSettingsResetButton" inherits="UIPanelButtonTemplate2" text="Reset Windows">
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LBSettingsFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ResetLBWindows()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
 	</Frame>
 </Ui>
