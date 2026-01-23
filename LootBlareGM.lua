@@ -1266,6 +1266,22 @@ function ResetLBWindows()
   itemRollFrame:SetWidth(270)
 end
 
+function ResetLBColors()
+  MSSR_Text_Color = DEFAULT_MSSR_Text_Color
+  MS_Text_Color = DEFAULT_MS_Text_Color
+  OSSR_Text_Color = DEFAULT_OSSR_Text_Color
+  OS_Text_Color = DEFAULT_OS_Text_Color
+  TMSR_Text_Color = DEFAULT_TMSR_Text_Color
+  TM_Text_Color = DEFAULT_TM_Text_Color
+
+  CORE_Text_Color = DEFAULT_CORE_Text_Color
+  RAIDER_Text_Color = DEFAULT_RAIDER_Text_Color
+  CASUAL_Text_Color = DEFAULT_CASUAL_Text_Color
+  MEMPUG_Text_Color = DEFAULT_MEMPUG_Text_Color
+
+  LBSettings_Update()
+end
+
 local function HexToRGB(hex)
     -- Remove the optional '#' character
     hex = string.gsub(hex, "#", "")

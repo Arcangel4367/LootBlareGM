@@ -880,6 +880,23 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 			</Button>
+			<Button name="LBSettingsResetColorsButton" inherits="UIPanelButtonTemplate2" text="Reset Colors">
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LBSettingsFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-110" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ResetLBColors()
+					</OnClick>
+				</Scripts>
+			</Button>
 			<Button name="MSSRColorButton" inherits="UIPanelButtonTemplate" >
 				<Size>
 					<AbsDimension x="100" y="32"/>
