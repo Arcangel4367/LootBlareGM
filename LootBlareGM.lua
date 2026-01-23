@@ -64,10 +64,10 @@ local DEFAULT_OS_Text_Color = "FFEC9512"
 local DEFAULT_TMSR_Text_Color = "FFAF40AF"
 local DEFAULT_TM_Text_Color = "FF00FFFF"
 
-local CORE_TEXT_COLOR = "FFFF00FF"
-local RAIDER_TEXT_COLOR = "FFFFFF00"
-local CASUAL_TEXT_COLOR = "FFEC9512"
-local MEMPUG_TEXT_COLOR = "FFFFFFFF"
+local DEFAULT_CORE_Text_Color = "FFFF00FF"
+local DEFAULT_RAIDER_Text_Color = "FFFFFF00"
+local DEFAULT_CASUAL_Text_Color = "FFEC9512"
+local DEFAULT_MEMPUG_Text_Color = "FFFFFFFF"
 
 local LB_PREFIX = "LootBlare "
 local LB_GET_DATA = "get data"
@@ -76,6 +76,8 @@ local LB_SET_ROLL_TIME = "Roll time set to "
 local LB_BID = "Bid on item: "
 local LB_AWARD = "Awarded to: "
 local LB_EPGPSET = "EPGP Set: "
+
+local R, G, B, A = 0.0, 0.0, 0.0, 1.0
 
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
@@ -105,6 +107,10 @@ local function CheckColors()
   if TMSR_Text_Color == nil then TMSR_Text_Color = DEFAULT_TMSR_Text_Color end
   if TM_Text_Color == nil then TM_Text_Color = DEFAULT_TM_Text_Color end
   --Role Colors
+  if CORE_Text_Color == nil then CORE_Text_Color = DEFAULT_CORE_Text_Color end
+  if RAIDER_Text_Color == nil then RAIDER_Text_Color = DEFAULT_RAIDER_Text_Color end
+  if CASUAL_Text_Color == nil then CASUAL_Text_Color = DEFAULT_CASUAL_Text_Color end
+  if MEMPUG_Text_Color == nil then MEMPUG_Text_Color = DEFAULT_MEMPUG_Text_Color end
 
 end
 
@@ -157,13 +163,13 @@ local function colorMsg(message)
     textColor = TM_Text_Color
   end
   if message.rankI <= 4 then
-    rankColor = CORE_TEXT_COLOR
+    rankColor = CORE_Text_Color
   elseif  message.rankI == 5 then
-    rankColor = RAIDER_TEXT_COLOR
+    rankColor = RAIDER_Text_Color
   elseif  message.rankI == 6 then
-    rankColor = CASUAL_TEXT_COLOR
+    rankColor = CASUAL_Text_Color
   elseif  message.rankI >= 7 then
-    rankColor = MEMPUG_TEXT_COLOR
+    rankColor = MEMPUG_Text_Color
   end
 
   local colored_msg = "|c".. rankColor .. ""  .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
@@ -182,13 +188,13 @@ local function colorEPGPMsg(message)
     textColor = OS_Text_Color
   end
   if message.rankI <= 4 then
-    rankColor = CORE_TEXT_COLOR
+    rankColor = CORE_Text_Color
   elseif  message.rankI == 5 then
-    rankColor = RAIDER_TEXT_COLOR
+    rankColor = RAIDER_Text_Color
   elseif  message.rankI == 6 then
-    rankColor = CASUAL_TEXT_COLOR
+    rankColor = CASUAL_Text_Color
   elseif  message.rankI >= 7 then
-    rankColor = MEMPUG_TEXT_COLOR
+    rankColor = MEMPUG_Text_Color
   end
   local colored_msg = "|c".. rankColor .. message.rank .. " |c" .. classColor .. message.roller .. "|r |c" .. textColor .. message.type .. "|r |cFF0070DE".. message.ratio .. "|r"
   return colored_msg
@@ -903,9 +909,9 @@ function FixEPGP()
 end
 
 function AwardConfirmation()
-  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n Award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n Award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)  
   if AwardSent ~= 1 then
-    AwardConfirm:Show()
+    AwardConfirm:Show() 
   end
 end
 
@@ -918,6 +924,8 @@ function AwardSend()
   if AwardSent ~= 1 then
     AwardSent = 1
     --lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    ConfirmationLabel:SetText("Item awarded to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    ConfirmationLabel:Show()
     SendAddonMessage(LB_PREFIX, LB_AWARD .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
   end
   AwardConfirm:Hide()
@@ -1199,8 +1207,44 @@ function LMImport_OnLoad()
   end
 end
 
-function LBSettings_OnLoad()
+function LBSettings_Update()
+  CheckColors()
   LBSettingsFrame:RegisterForDrag("LeftButton")
+
+  --Roll Colors
+  MSSRColorLabel:SetText("|c" .. MSSR_Text_Color .. "MSSR Color |r")
+  MSColorLabel:SetText("|c" .. MS_Text_Color .. "MS Color |r")
+  OSSRColorLabel:SetText("|c" .. OSSR_Text_Color .. "OSSR Color |r")
+  OSColorLabel:SetText("|c" .. OS_Text_Color .. "OS Color |r")
+  TMSRColorLabel:SetText("|c" .. TMSR_Text_Color .. "TMSR Color |r")
+  TMColorLabel:SetText("|c" .. TM_Text_Color .. "TM Color |r")
+
+  --Role Colors
+  CoreColorLabel:SetText("|c" .. CORE_Text_Color .. "Core Role Color |r")
+  RaiderColorLabel:SetText("|c" .. RAIDER_Text_Color .. "Raider Role Color |r")
+  CasualColorLabel:SetText("|c" .. CASUAL_Text_Color .. "Casual Role Color |r")
+  NonGuildieColorLabel:SetText("|c" .. MEMPUG_Text_Color .. "Default Role Color |r")
+
+  if FrameAutoClose == true then
+    LBSettingsAutoCloseCheckButton:SetChecked(true)
+  else
+    LBSettingsAutoCloseCheckButton:SetChecked(false)
+  end
+
+  if masterLooter == UnitName("player") then
+    LBSettingsFrameDurationBox:Show()
+    LBSettingsFrameDuration:Hide()
+    LBSettingsFrameDurationBox:SetText(tostring(FrameShownDuration))
+    LBSettingsFrameDuration:SetText(tostring(FrameShownDuration))
+  else
+    LBSettingsFrameDurationBox:Hide()
+    LBSettingsFrameDuration:Show()
+    LBSettingsFrameDurationBox:SetText(tostring(FrameShownDuration))
+    LBSettingsFrameDuration:SetText(tostring(FrameShownDuration))
+  end
+
+  
+
 end
 
 function ResetLBWindows()
@@ -1209,6 +1253,333 @@ function ResetLBWindows()
   LMScrollFrameResized()
   itemRollFrame:SetHeight(400)
   itemRollFrame:SetWidth(270)
+end
+
+local function HexToRGB(hex)
+    -- Remove the optional '#' character
+    hex = string.gsub(hex, "#", "")
+    
+    -- Extract the R, G, and B hex substrings (each is 2 characters)
+    local rhex, ghex, bhex = string.sub(hex, 3, 4), string.sub(hex, 5, 6), string.sub(hex, 7, 8)
+    -- Convert hex substrings to decimal numbers (base 16)
+    return tonumber(rhex , 16) / 255, tonumber(ghex, 16) / 255, tonumber(bhex, 16) / 255
+end
+
+local function RGBToHex(r, g, b)
+    -- Ensure values are within the valid 0.0 to 1.0 range
+    -- Convert floats to 0-255 range and then to a 2-digit hex string
+    -- The "ff" at the beginning is for full opacity (alpha) in the WoW color string format
+    return string.format("FF%02X%02X%02X", r * 255, g * 255, b * 255)
+end
+
+local function ColorCallbackMSSR(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MSSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerMSSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackMSSR
+  ColorPickerFrame.opacityFunc = ColorCallbackMSSR
+  ColorPickerFrame.cancelFunc = ColorCallbackMSSR
+  local R, G, B = HexToRGB(MSSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackMS(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MS_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerMS()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackMS
+  ColorPickerFrame.opacityFunc = ColorCallbackMS
+  ColorPickerFrame.cancelFunc = ColorCallbackMS
+  local R, G, B = HexToRGB(MS_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackOSSR()
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  OSSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerOSSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackOSSR
+  ColorPickerFrame.opacityFunc = ColorCallbackOSSR
+  ColorPickerFrame.cancelFunc = ColorCallbackOSSR
+  local R, G, B = HexToRGB(OSSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackOS(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  OS_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerOS()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackOS
+  ColorPickerFrame.opacityFunc = ColorCallbackOS
+  ColorPickerFrame.cancelFunc = ColorCallbackOS
+  local R, G, B = HexToRGB(OS_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackTMSR(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  TMSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerTMSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackTMSR
+  ColorPickerFrame.opacityFunc = ColorCallbackTMSR
+  ColorPickerFrame.cancelFunc = ColorCallbackTMSR
+  local R, G, B = HexToRGB(TMSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackTM(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  TM_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerTM()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackTM
+  ColorPickerFrame.opacityFunc = ColorCallbackTM
+  ColorPickerFrame.cancelFunc = ColorCallbackTM
+  local R, G, B = HexToRGB(TM_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackCore(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  CORE_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerCore()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackCore
+  ColorPickerFrame.opacityFunc = ColorCallbackCore
+  ColorPickerFrame.cancelFunc = ColorCallbackCore
+  local R, G, B = HexToRGB(CORE_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackRaider(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  RAIDER_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerRaider()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackRaider
+  ColorPickerFrame.opacityFunc = ColorCallbackRaider
+  ColorPickerFrame.cancelFunc = ColorCallbackRaider
+  local R, G, B = HexToRGB(RAIDER_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackCasual(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  CASUAL_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerCasual()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackCasual
+  ColorPickerFrame.opacityFunc = ColorCallbackCasual
+  ColorPickerFrame.cancelFunc = ColorCallbackCasual
+  local R, G, B = HexToRGB(CASUAL_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackNonGuildie(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MEMPUG_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerNonGuildie()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackNonGuildie
+  ColorPickerFrame.opacityFunc = ColorCallbackNonGuildie
+  ColorPickerFrame.cancelFunc = ColorCallbackNonGuildie
+  local R, G, B = HexToRGB(MEMPUG_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
 end
 
 function LMScrollFrameResized()
@@ -1269,7 +1640,24 @@ local function RollCheck(maxRoll, message)
   end  
 end
 
+function ToggleAutoClose()
 
+end
+
+function UpdateFrameDuration()
+  LBSettingsFrameDurationBox:ClearFocus()
+  local input = LBSettingsFrameDurationBox:GetText()
+  local duration = tonumber(input)
+  if duration > 0 and masterLooter == UnitName("player") then
+    FrameShownDuration = duration
+    lb_print("Rolling duration set to " .. FrameShownDuration .. " seconds.")
+    if IsSenderMasterLooter(UnitName("player")) then
+      SendAddonMessage(LB_PREFIX, LB_SET_ROLL_TIME .. FrameShownDuration .. " seconds", "RAID")
+    end
+  else
+    lb_print("Invalid duration input. Please enter a positive number.")
+  end
+end
 
 local function HandleChatMessage(event, message, sender)
   if (event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER") then
@@ -1324,6 +1712,7 @@ local function HandleChatMessage(event, message, sender)
         return
       end
       AwardSent = 0
+      ConfirmationLabel:Hide()
       resetRolls()
       UpdateTextArea(itemRollFrame)
       UpdateLMScrollFrame()

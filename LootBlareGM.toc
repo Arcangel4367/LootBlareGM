@@ -3,7 +3,7 @@
 ## Author: Ehawne, Sivent, Gulolio, Arcangel
 ## Version: 2.3.0
 ## Notes: Make loot rolls obvious
-## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP, PlayerGP, GuildEPGP, EPGPLog, NUM_DISPLAY_ROWS, MSSR_Text_Color, MS_Text_Color, OSSR_Text_Color, OS_Text_Color, TMSR_Text_Color, TM_Text_Color
+## SavedVariables:FrameShownDuration, FrameAutoClose, PlayerEP, PlayerGP, GuildEPGP, EPGPLog, NUM_DISPLAY_ROWS, MSSR_Text_Color, MS_Text_Color, OSSR_Text_Color, OS_Text_Color, TMSR_Text_Color, TM_Text_Color, CORE_Text_Color, RAIDER_Text_Color, CASUAL_Text_Color, MEMPUG_Text_Color
 
 Database\Kara40.lua
 Database\GoldenMoon.lua
