@@ -306,6 +306,23 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 		    </Button>
+			<Button name="UndoButton" inherits="UIPanelButtonTemplate2" text="Undo Award" hidden="true">
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="10" y="4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						AwardUndo()
+					</OnClick>
+				</Scripts>
+		    </Button>
 			<ScrollFrame name="LootMasterScrollFrame" parent="LootMasterFrame" inherits="FauxScrollFrameTemplate">
     			<Anchors>
         			<Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="TOPLEFT">

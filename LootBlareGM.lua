@@ -75,6 +75,7 @@ local LB_SET_ML = "ML set to "
 local LB_SET_ROLL_TIME = "Roll time set to "
 local LB_BID = "Bid on item: "
 local LB_AWARD = "Awarded to: "
+local LB_UNDO = "Undo award to: "
 local LB_EPGPSET = "EPGP Set: "
 
 local R, G, B, A = 0.0, 0.0, 0.0, 1.0
@@ -927,8 +928,18 @@ function AwardSend()
     ConfirmationLabel:SetText("Item awarded to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
     ConfirmationLabel:Show()
     SendAddonMessage(LB_PREFIX, LB_AWARD .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    UndoButton:Show()
   end
   AwardConfirm:Hide()
+end
+
+function AwardUndo()
+  if AwardSent == 1 then
+    AwardSent = 0
+    ConfirmationLabel:SetText("Last award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price .. " has been undone.")
+    SendAddonMessage(LB_PREFIX, LB_UNDO .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    UndoButton:Hide()
+  end
 end
 
 local function UpdateTextArea(frame)
@@ -1849,8 +1860,22 @@ local function HandleChatMessage(event, message, sender)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = "Award", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
-        
-      end
+      end  
+      
+    elseif string.find(message, LB_UNDO) then
+      local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,price = string.find(message, "+(%d*%.?%d+)+")
+      lb_print("Award undone for: " .. player .. " for " .. price)
+      if player == UnitName("player") then
+        PlayerGP = PlayerGP - tonumber(price)
+        CheckGP()
+        Ratio = PlayerEP/ActiveGP
+        Ratio = string.format("%.2f", Ratio)
+        itemRollFrame.GP:SetText("GP: " ..ActiveGP)
+        itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = "Undo", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
+      end  
+    
     end
   end
 end
