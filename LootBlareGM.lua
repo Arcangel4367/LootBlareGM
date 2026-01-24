@@ -1668,7 +1668,13 @@ local function RollCheck(maxRoll, message)
 end
 
 function ToggleAutoClose()
-
+  if LBSettingsAutoCloseCheckButton:GetChecked() == 1 then
+    FrameAutoClose = true
+    lb_print("Auto-close enabled.")
+  elseif LBSettingsAutoCloseCheckButton:GetChecked() == nil then
+    FrameAutoClose = false
+    lb_print("Auto-close disabled.")
+  end
 end
 
 function UpdateFrameDuration()
@@ -1936,6 +1942,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     lb_print("Type /lb settings to see the current settings.")
     lb_print("Type /lb log to see the last 20 changes to your EPGP values.")
   elseif msg == "settings" then
+    LBSettingsFrame:Show()
     lb_print("Frame shown duration: " .. FrameShownDuration .. " seconds.")
     lb_print("Auto closing: " .. (FrameAutoClose and "on" or "off"))
     lb_print("Master Looter: " .. (masterLooter or "unknown"))
