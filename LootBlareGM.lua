@@ -29,7 +29,7 @@ local CurrentSelection
 local FixSelected
 local RaidEPGP = 0
 local MinGP = 100
-local TestZone = 0
+local TestZone = 1
 local Naxx = 0
 local K40 = 1
 local MSPrice = 0
@@ -57,17 +57,17 @@ local RAID_CLASS_COLORS = {
 
 local ADDON_TEXT_COLOR = "FFEDD8BB"
 local DEFAULT_TEXT_COLOR = "FFFFFF00"
-local MSSR_Text_Color = "FFFF0080"
-local MS_Text_Color = "FFFFFF00"
-local OSSR_TEXT_COLOR = "FF776CDA"
-local OS_TEXT_COLOR = "FFEC9512"
-local TMSR_TEXT_COLOR = "FFAF40AF"
-local TM_TEXT_COLOR = "FF00FFFF"
+local DEFAULT_MSSR_Text_Color = "FFFF0080"
+local DEFAULT_MS_Text_Color = "FFFFFF00"
+local DEFAULT_OSSR_Text_Color = "FF776CDA"
+local DEFAULT_OS_Text_Color = "FFEC9512"
+local DEFAULT_TMSR_Text_Color = "FFAF40AF"
+local DEFAULT_TM_Text_Color = "FF00FFFF"
 
-local CORE_TEXT_COLOR = "FFFF00FF"
-local RAIDER_TEXT_COLOR = "FFFFFF00"
-local CASUAL_TEXT_COLOR = "FFEC9512"
-local MEMPUG_TEXT_COLOR = "FFFFFFFF"
+local DEFAULT_CORE_Text_Color = "FFFF00FF"
+local DEFAULT_RAIDER_Text_Color = "FFFFFF00"
+local DEFAULT_CASUAL_Text_Color = "FFEC9512"
+local DEFAULT_MEMPUG_Text_Color = "FFFFFFFF"
 
 local LB_PREFIX = "LootBlare "
 local LB_GET_DATA = "get data"
@@ -75,13 +75,16 @@ local LB_SET_ML = "ML set to "
 local LB_SET_ROLL_TIME = "Roll time set to "
 local LB_BID = "Bid on item: "
 local LB_AWARD = "Awarded to: "
+local LB_UNDO = "Undo award to: "
 local LB_EPGPSET = "EPGP Set: "
+
+local R, G, B, A = 0.0, 0.0, 0.0, 1.0
 
 local function lb_print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|c" .. ADDON_TEXT_COLOR .. "LootBlare: " .. msg .. "|r")
 end
 
-NUM_DISPLAY_ROWS = 12
+--NUM_DISPLAY_ROWS = 12
 ScrollShow = nil
 
 local function resetRolls()
@@ -96,7 +99,21 @@ local function resetRolls()
   EPGPOSRollMessages = {}
 end
 
+local function CheckColors()
+  --Roll Colors
+  if MSSR_Text_Color == nil then MSSR_Text_Color = DEFAULT_MSSR_Text_Color end
+  if MS_Text_Color == nil then MS_Text_Color = DEFAULT_MS_Text_Color end
+  if OSSR_Text_Color == nil then OSSR_Text_Color = DEFAULT_OSSR_Text_Color end
+  if OS_Text_Color == nil then OS_Text_Color = DEFAULT_OS_Text_Color end
+  if TMSR_Text_Color == nil then TMSR_Text_Color = DEFAULT_TMSR_Text_Color end
+  if TM_Text_Color == nil then TM_Text_Color = DEFAULT_TM_Text_Color end
+  --Role Colors
+  if CORE_Text_Color == nil then CORE_Text_Color = DEFAULT_CORE_Text_Color end
+  if RAIDER_Text_Color == nil then RAIDER_Text_Color = DEFAULT_RAIDER_Text_Color end
+  if CASUAL_Text_Color == nil then CASUAL_Text_Color = DEFAULT_CASUAL_Text_Color end
+  if MEMPUG_Text_Color == nil then MEMPUG_Text_Color = DEFAULT_MEMPUG_Text_Color end
 
+end
 
 local function sortRolls()
   table.sort(EPGPMSRollMessages, function(a, b)
@@ -138,22 +155,22 @@ local function colorMsg(message)
   elseif string.find(msg, "-"..MSRollCap) then
     textColor = MS_Text_Color
   elseif string.find(msg, "-"..OSSRRollCap) then
-    textColor = OSSR_TEXT_COLOR
+    textColor = OSSR_Text_Color
   elseif string.find(msg, "-"..OSRollCap) then
-    textColor = OS_TEXT_COLOR
+    textColor = OS_Text_Color
   elseif string.find(msg, "-"..tmogSRRollCap) then
-    textColor = TMSR_TEXT_COLOR
+    textColor = TMSR_Text_Color
   elseif string.find(msg, "-"..tmogRollCap) then
-    textColor = TM_TEXT_COLOR
+    textColor = TM_Text_Color
   end
   if message.rankI <= 4 then
-    rankColor = CORE_TEXT_COLOR
+    rankColor = CORE_Text_Color
   elseif  message.rankI == 5 then
-    rankColor = RAIDER_TEXT_COLOR
+    rankColor = RAIDER_Text_Color
   elseif  message.rankI == 6 then
-    rankColor = CASUAL_TEXT_COLOR
+    rankColor = CASUAL_Text_Color
   elseif  message.rankI >= 7 then
-    rankColor = MEMPUG_TEXT_COLOR
+    rankColor = MEMPUG_Text_Color
   end
 
   local colored_msg = "|c".. rankColor .. ""  .. message.rank .. " |c" .. classColor .. "" .. message.roller .. "|r |c" .. textColor .. message_end .. "|r"
@@ -169,16 +186,16 @@ local function colorEPGPMsg(message)
   if message.type == "MS" then
     textColor = MS_Text_Color
   elseif message.type == "OS" then
-    textColor = OS_TEXT_COLOR
+    textColor = OS_Text_Color
   end
   if message.rankI <= 4 then
-    rankColor = CORE_TEXT_COLOR
+    rankColor = CORE_Text_Color
   elseif  message.rankI == 5 then
-    rankColor = RAIDER_TEXT_COLOR
+    rankColor = RAIDER_Text_Color
   elseif  message.rankI == 6 then
-    rankColor = CASUAL_TEXT_COLOR
+    rankColor = CASUAL_Text_Color
   elseif  message.rankI >= 7 then
-    rankColor = MEMPUG_TEXT_COLOR
+    rankColor = MEMPUG_Text_Color
   end
   local colored_msg = "|c".. rankColor .. message.rank .. " |c" .. classColor .. message.roller .. "|r |c" .. textColor .. message.type .. "|r |cFF0070DE".. message.ratio .. "|r"
   return colored_msg
@@ -518,6 +535,65 @@ local function CreateLMButton(frame)
   return button
 end
 
+local function CreateResizeButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(16)
+  button:SetHeight(16)
+  button:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+
+  local icon = button:CreateTexture(nil, "IMAGE")
+  icon:SetTexture("Interface\\AddOns\\LootBlareGM\\images\\ResizeGrip")
+  icon:SetAllPoints(button)
+
+  button:SetHighlightTexture("Interface\\AddOns\\LootBlareGM\\images\\ResizeGrip", "ADD")
+
+  button:SetScript("OnMouseDown", function(self)
+      
+      frame:StartSizing("BOTTOMRIGHT")
+  end)
+
+  button:SetScript("OnMouseUp", function(self)
+      
+      frame:StopMovingOrSizing()
+      LMScrollFrameResized()
+  end)
+
+  return button
+end
+
+local function CreateSettingsButton(frame)
+  local button = CreateFrame("Button", nil, frame, UIParent)
+  button:SetWidth(16)
+  button:SetHeight(16)
+  button:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
+
+  local icon = button:CreateTexture(nil, "IMAGE")
+  icon:SetTexture("Interface\\GossipFrame\\BinderGossipIcon")
+  icon:SetAllPoints(button)
+
+  button:SetHighlightTexture("Interface\\GossipFrame\\BinderGossipIcon", "ADD")
+
+  button:SetScript("OnClick", function(self)
+      if LBSettingsFrame:IsVisible() then
+        LBSettingsFrame:Hide()
+      else
+        LBSettingsFrame:Show()
+      end
+  end)
+
+  button:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Open LootBlare Settings", nil, nil, nil, nil, true)
+      GameTooltip:Show()
+  end)
+
+  button:SetScript("OnLeave", function(self)
+      GameTooltip:Hide()
+  end)
+
+  return button
+end
+
 local function MSBid()
   if MSPrice == -1 then
     RandomRoll(1,MSRollCap)
@@ -537,11 +613,12 @@ end
 
 
 local function CreateItemRollFrame()
+  CheckColors()
   local frame = CreateFrame("Frame", "ItemRollFrame", UIParent)
   
   frame:SetWidth(270)
-  
   frame:SetHeight(400)
+  frame:SetMinResize(270, 300)
   frame:SetPoint("CENTER",UIParent,"CENTER",0,0) -- Position at center of the parent frame
   frame:SetBackdrop({
       bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -553,6 +630,9 @@ local function CreateItemRollFrame()
 
   frame:SetMovable(true)
   frame:EnableMouse(true)
+  frame:SetResizable(true)
+  frame:SetFrameLevel(10)
+  frame:SetFrameStrata("High")
 
   frame:RegisterForDrag("LeftButton") -- Only start dragging with the left mouse button
   frame:SetScript("OnDragStart", function () frame:StartMoving() end)
@@ -565,12 +645,12 @@ local function CreateItemRollFrame()
   local EP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   local GP = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
   local EPGPRatio = frame:CreateFontString(nil,"OVERLAY", "GameFontNormal")
-  EPGPl1:SetPoint("RIGHT", frame, "RIGHT", -35, 175)
+  EPGPl1:SetPoint("RIGHT", frame, "TOP", 100, -25)
   EPGPl1:SetFont(FONT_NAME, 13)
   EPGPl2:SetPoint("LEFT", EPGPl1, "BOTTOMLEFT", 0, -10)
   EPGPl2:SetFont(FONT_NAME, 10)
   EPGPl1:SetText("EPGP Prices")
-  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_TEXT_COLOR.."OS: 0|r")
+  EPGPl2:SetText("|c"..MS_Text_Color.. "MS: 0|r |c"..OS_Text_Color.."OS: 0|r")
   EP:SetPoint("LEFT", frame, "BOTTOMLEFT", 135, 25)
   EP:SetFont(FONT_NAME, 10)
   EP:SetText("EP:")
@@ -598,6 +678,9 @@ local function CreateItemRollFrame()
   frame.BidOS = CreateActionButton(frame, "Bid OS", "Bid for OS", 2, function() OSBid() end)
   
   frame.LM = CreateLMButton(frame)
+
+  frame.RS = CreateResizeButton(frame)
+  frame.set = CreateSettingsButton(frame)
   
   frame.BidMS:Hide()
   frame.BidOS:Hide()
@@ -712,7 +795,7 @@ local function SetItemInfo(frame, itemLinkArg)
     if MSPrice == -1 or OSPrice == -1 then
       frame.EPGPl2:SetText("Non-EPGP, Roll")
     else
-      frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_TEXT_COLOR.."OS: " ..OSPrice.."|r")
+      frame.EPGPl2:SetText("|c"..MS_Text_Color.."MS: " ..MSPrice.."|r  |c"..OS_Text_Color.."OS: " ..OSPrice.."|r")
     end
     
   end
@@ -771,8 +854,9 @@ local function CreateTextArea(frame)
   else
     textArea:SetFont("Fonts\\FRIZQT__.TTF", 11)
   end
-  textArea:SetHeight(300) -- Size of the icon
+  --textArea:SetHeight(300) -- Size of the icon
   textArea:SetPoint("TOP", frame, "TOP", 0, -80)
+  textArea:SetPoint("BOTTOM", frame, "BOTTOM", 0, 50)
   textArea:SetJustifyH("LEFT")
   textArea:SetJustifyV("TOP")
 
@@ -826,9 +910,9 @@ function FixEPGP()
 end
 
 function AwardConfirmation()
-  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n Award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+  Confirmation:SetText(itemRollFrame.name:GetText() .. "\n Award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)  
   if AwardSent ~= 1 then
-    AwardConfirm:Show()
+    AwardConfirm:Show() 
   end
 end
 
@@ -841,9 +925,21 @@ function AwardSend()
   if AwardSent ~= 1 then
     AwardSent = 1
     --lb_print("Item awarded to: " .. CurrentSelection.type .. " ".. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    ConfirmationLabel:SetText("Item awarded to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
+    ConfirmationLabel:Show()
     SendAddonMessage(LB_PREFIX, LB_AWARD .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    UndoButton:Show()
   end
   AwardConfirm:Hide()
+end
+
+function AwardUndo()
+  if AwardSent == 1 then
+    AwardSent = 0
+    ConfirmationLabel:SetText("Last award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price .. " has been undone.")
+    SendAddonMessage(LB_PREFIX, LB_UNDO .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    UndoButton:Hide()
+  end
 end
 
 local function UpdateTextArea(frame)
@@ -924,20 +1020,20 @@ end
 function UpdateLMScrollFrame()
   local length
   local offset = 0
-  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > 12 then
+  --lb_print("Frame height:" .. LootMasterScrollFrame:GetHeight())
+  if (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages)) > (NUM_DISPLAY_ROWS) then
     length = (getn(EPGPMSRollMessages) + getn(EPGPOSRollMessages))
     offset = FauxScrollFrame_GetOffset(LootMasterScrollFrame)
     LootMasterScrollFrameScrollBar:Show()
     LootMasterScrollFrameScrollBarScrollUpButton:Show()
     LootMasterScrollFrameScrollBarScrollDownButton:Show()
   else
-    length = 13
+    length = NUM_DISPLAY_ROWS + 1
     LootMasterScrollFrameScrollBar:Hide()
     LootMasterScrollFrameScrollBarScrollUpButton:Hide()
     LootMasterScrollFrameScrollBarScrollDownButton:Hide()
   end
   FauxScrollFrame_Update(LootMasterScrollFrame, length, NUM_DISPLAY_ROWS, 20)
-  
   for i = 1, NUM_DISPLAY_ROWS do
     local rowIndex = offset + i;
     local rowFrame = _G["LMScrollFrame" .. i];
@@ -1096,14 +1192,15 @@ function LM_OnLoad()
   LootMasterFrame:RegisterForDrag("LeftButton")
   UIDropDownMenu_SetWidth(120, OverideFrameDropDownType)
   UIDropDownMenu_SetWidth(50, OverideRollTypeFrameDropDownType)
-  for i = 1, NUM_DISPLAY_ROWS do
+  LootMasterFrame:SetMinResize(400, 400)
+  for i = 1, 30 do
     local rowFrame = CreateFrame("Button", "LMScrollFrame" .. i, LootMasterScrollFrame, "LMScrollEntryTemplate");
     if i == 1 then
       rowFrame:SetPoint("TOPLEFT", LootMasterScrollFrame, "TOPLEFT", 2, -5);
     else
       rowFrame:SetPoint("TOPLEFT", _G["LMScrollFrame" .. (i-1)], "BOTTOMLEFT", 0, -4);
     end
-    --rowFrame:Hide()
+    rowFrame:Hide()
   end
 end
 
@@ -1121,6 +1218,412 @@ function LMImport_OnLoad()
   end
 end
 
+function LBSettings_Update()
+  CheckColors()
+  LBSettingsFrame:RegisterForDrag("LeftButton")
+
+  --Roll Colors
+  MSSRColorLabel:SetText("|c" .. MSSR_Text_Color .. "MSSR Color |r")
+  MSColorLabel:SetText("|c" .. MS_Text_Color .. "MS Color |r")
+  OSSRColorLabel:SetText("|c" .. OSSR_Text_Color .. "OSSR Color |r")
+  OSColorLabel:SetText("|c" .. OS_Text_Color .. "OS Color |r")
+  TMSRColorLabel:SetText("|c" .. TMSR_Text_Color .. "TMSR Color |r")
+  TMColorLabel:SetText("|c" .. TM_Text_Color .. "TM Color |r")
+
+  --Role Colors
+  CoreColorLabel:SetText("|c" .. CORE_Text_Color .. "Core Role Color |r")
+  RaiderColorLabel:SetText("|c" .. RAIDER_Text_Color .. "Raider Role Color |r")
+  CasualColorLabel:SetText("|c" .. CASUAL_Text_Color .. "Casual Role Color |r")
+  NonGuildieColorLabel:SetText("|c" .. MEMPUG_Text_Color .. "Default Role Color |r")
+
+  if FrameAutoClose == true then
+    LBSettingsAutoCloseCheckButton:SetChecked(true)
+  else
+    LBSettingsAutoCloseCheckButton:SetChecked(false)
+  end
+
+  if masterLooter == UnitName("player") then
+    LBSettingsFrameDurationBox:Show()
+    LBSettingsFrameDuration:Hide()
+    LBSettingsFrameDurationBox:SetText(tostring(FrameShownDuration))
+    LBSettingsFrameDuration:SetText(tostring(FrameShownDuration))
+  else
+    LBSettingsFrameDurationBox:Hide()
+    LBSettingsFrameDuration:Show()
+    LBSettingsFrameDurationBox:SetText(tostring(FrameShownDuration))
+    LBSettingsFrameDuration:SetText(tostring(FrameShownDuration))
+  end
+
+  
+
+end
+
+function ResetLBWindows()
+  LootMasterFrame:SetHeight(400)
+  LootMasterFrame:SetWidth(400)
+  LMScrollFrameResized()
+  itemRollFrame:SetHeight(400)
+  itemRollFrame:SetWidth(270)
+end
+
+function ResetLBColors()
+  MSSR_Text_Color = DEFAULT_MSSR_Text_Color
+  MS_Text_Color = DEFAULT_MS_Text_Color
+  OSSR_Text_Color = DEFAULT_OSSR_Text_Color
+  OS_Text_Color = DEFAULT_OS_Text_Color
+  TMSR_Text_Color = DEFAULT_TMSR_Text_Color
+  TM_Text_Color = DEFAULT_TM_Text_Color
+
+  CORE_Text_Color = DEFAULT_CORE_Text_Color
+  RAIDER_Text_Color = DEFAULT_RAIDER_Text_Color
+  CASUAL_Text_Color = DEFAULT_CASUAL_Text_Color
+  MEMPUG_Text_Color = DEFAULT_MEMPUG_Text_Color
+
+  LBSettings_Update()
+end
+
+local function HexToRGB(hex)
+    -- Remove the optional '#' character
+    hex = string.gsub(hex, "#", "")
+    
+    -- Extract the R, G, and B hex substrings (each is 2 characters)
+    local rhex, ghex, bhex = string.sub(hex, 3, 4), string.sub(hex, 5, 6), string.sub(hex, 7, 8)
+    -- Convert hex substrings to decimal numbers (base 16)
+    return tonumber(rhex , 16) / 255, tonumber(ghex, 16) / 255, tonumber(bhex, 16) / 255
+end
+
+local function RGBToHex(r, g, b)
+    -- Ensure values are within the valid 0.0 to 1.0 range
+    -- Convert floats to 0-255 range and then to a 2-digit hex string
+    -- The "ff" at the beginning is for full opacity (alpha) in the WoW color string format
+    return string.format("FF%02X%02X%02X", r * 255, g * 255, b * 255)
+end
+
+local function ColorCallbackMSSR(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MSSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerMSSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackMSSR
+  ColorPickerFrame.opacityFunc = ColorCallbackMSSR
+  ColorPickerFrame.cancelFunc = ColorCallbackMSSR
+  local R, G, B = HexToRGB(MSSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackMS(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MS_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerMS()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackMS
+  ColorPickerFrame.opacityFunc = ColorCallbackMS
+  ColorPickerFrame.cancelFunc = ColorCallbackMS
+  local R, G, B = HexToRGB(MS_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackOSSR()
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  OSSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerOSSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackOSSR
+  ColorPickerFrame.opacityFunc = ColorCallbackOSSR
+  ColorPickerFrame.cancelFunc = ColorCallbackOSSR
+  local R, G, B = HexToRGB(OSSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackOS(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  OS_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerOS()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackOS
+  ColorPickerFrame.opacityFunc = ColorCallbackOS
+  ColorPickerFrame.cancelFunc = ColorCallbackOS
+  local R, G, B = HexToRGB(OS_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackTMSR(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  TMSR_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerTMSR()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackTMSR
+  ColorPickerFrame.opacityFunc = ColorCallbackTMSR
+  ColorPickerFrame.cancelFunc = ColorCallbackTMSR
+  local R, G, B = HexToRGB(TMSR_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackTM(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  TM_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerTM()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackTM
+  ColorPickerFrame.opacityFunc = ColorCallbackTM
+  ColorPickerFrame.cancelFunc = ColorCallbackTM
+  local R, G, B = HexToRGB(TM_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackCore(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  CORE_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerCore()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackCore
+  ColorPickerFrame.opacityFunc = ColorCallbackCore
+  ColorPickerFrame.cancelFunc = ColorCallbackCore
+  local R, G, B = HexToRGB(CORE_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackRaider(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  RAIDER_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerRaider()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackRaider
+  ColorPickerFrame.opacityFunc = ColorCallbackRaider
+  ColorPickerFrame.cancelFunc = ColorCallbackRaider
+  local R, G, B = HexToRGB(RAIDER_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackCasual(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  CASUAL_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerCasual()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackCasual
+  ColorPickerFrame.opacityFunc = ColorCallbackCasual
+  ColorPickerFrame.cancelFunc = ColorCallbackCasual
+  local R, G, B = HexToRGB(CASUAL_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function ColorCallbackNonGuildie(restore)
+  local newR, newG, newB, newA;
+  if restore then
+    -- The user bailed, we extract the old color from the table created by ShowColorPicker.
+    newR, newG, newB, newA = unpack(restore);
+  else
+    -- Something changed
+    newA, newR, newG, newB = OpacitySliderFrame:GetValue(), ColorPickerFrame:GetColorRGB();
+  end
+  
+  -- Update our internal storage.
+  MEMPUG_Text_Color = RGBToHex(newR , newG , newB)
+  -- And update any UI elements that use this color...
+  LBSettings_Update()
+end
+
+function ShowColorPickerNonGuildie()
+  CheckColors()
+  ColorPickerFrame.func = ColorCallbackNonGuildie
+  ColorPickerFrame.opacityFunc = ColorCallbackNonGuildie
+  ColorPickerFrame.cancelFunc = ColorCallbackNonGuildie
+  local R, G, B = HexToRGB(MEMPUG_Text_Color)
+  
+  A = 1.0
+  ColorPickerFrame:SetColorRGB(R,G,B);
+  ColorPickerFrame.hasOpacity, ColorPickerFrame.opacity = (A ~= nil), A;
+  ColorPickerFrame.previousValues = {R,G,B,A};
+  ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+  ColorPickerFrame:Show();
+end
+
+function LMScrollFrameResized()
+  NUM_DISPLAY_ROWS = math.floor(LootMasterScrollFrame:GetHeight() / 22)
+  for i = 1, 30 do
+    local rowFrame = _G["LMScrollFrame" .. i];
+    if rowFrame then
+      if i <= NUM_DISPLAY_ROWS then
+        rowFrame:Show()
+      else
+        rowFrame:Hide()
+      end
+    end
+  end
+  UpdateLMScrollFrame()
+end
+
 function kiddos ()
     DEFAULT_CHAT_FRAME:AddMessage(GetMouseFocus():GetName())
     local kiddos = { GetMouseFocus():GetRegions() };
@@ -1133,6 +1636,12 @@ function LM_StartMoving()
 	
 	LootMasterFrame:StartMoving();
 	
+end
+
+function LMSettings_StartMoving()
+  
+  LBSettingsFrame:StartMoving();
+  
 end
 
 function LMImport_StartMoving()
@@ -1156,6 +1665,31 @@ local function RollCheck(maxRoll, message)
   elseif maxRoll == tostring(tmogRollCap) then
     table.insert(tmogRollMessages, message)
   end  
+end
+
+function ToggleAutoClose()
+  if LBSettingsAutoCloseCheckButton:GetChecked() == 1 then
+    FrameAutoClose = true
+    lb_print("Auto-close enabled.")
+  elseif LBSettingsAutoCloseCheckButton:GetChecked() == nil then
+    FrameAutoClose = false
+    lb_print("Auto-close disabled.")
+  end
+end
+
+function UpdateFrameDuration()
+  LBSettingsFrameDurationBox:ClearFocus()
+  local input = LBSettingsFrameDurationBox:GetText()
+  local duration = tonumber(input)
+  if duration > 0 and masterLooter == UnitName("player") then
+    FrameShownDuration = duration
+    lb_print("Rolling duration set to " .. FrameShownDuration .. " seconds.")
+    if IsSenderMasterLooter(UnitName("player")) then
+      SendAddonMessage(LB_PREFIX, LB_SET_ROLL_TIME .. FrameShownDuration .. " seconds", "RAID")
+    end
+  else
+    lb_print("Invalid duration input. Please enter a positive number.")
+  end
 end
 
 local function HandleChatMessage(event, message, sender)
@@ -1211,6 +1745,7 @@ local function HandleChatMessage(event, message, sender)
         return
       end
       AwardSent = 0
+      ConfirmationLabel:Hide()
       resetRolls()
       UpdateTextArea(itemRollFrame)
       UpdateLMScrollFrame()
@@ -1228,6 +1763,8 @@ local function HandleChatMessage(event, message, sender)
     if FrameAutoClose == nil then FrameAutoClose = true end
     if PlayerEP == nil then PlayerEP = 100 end
     if PlayerGP == nil then PlayerGP = 0 end
+    if NUM_DISPLAY_ROWS == nil then NUM_DISPLAY_ROWS = 12 end
+    CheckColors()
     if EPGPLog == nil then   
     EPGPLog = {} 
     elseif getn(EPGPLog) > 20  then
@@ -1345,8 +1882,22 @@ local function HandleChatMessage(event, message, sender)
         itemRollFrame.GP:SetText("GP: " ..ActiveGP)
         itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
         table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = "Award", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
-        
-      end
+      end  
+      
+    elseif string.find(message, LB_UNDO) then
+      local _,_,player = string.find(message, "-(%S+)-")
+      local _,_,price = string.find(message, "+(%d*%.?%d+)+")
+      lb_print("Award undone for: " .. player .. " for " .. price)
+      if player == UnitName("player") then
+        PlayerGP = PlayerGP - tonumber(price)
+        CheckGP()
+        Ratio = PlayerEP/ActiveGP
+        Ratio = string.format("%.2f", Ratio)
+        itemRollFrame.GP:SetText("GP: " ..ActiveGP)
+        itemRollFrame.EPGPRatio:SetText("Priority: " ..Ratio)
+        table.insert(EPGPLog, 1, { sender = arg4, time = date("%Y-%m-%d %H:%M:%S"), type = "Undo", ep = PlayerEP, gp = PlayerGP, ratio = Ratio })
+      end  
+    
     end
   end
 end
@@ -1391,6 +1942,7 @@ SlashCmdList["LOOTBLARE"] = function(msg)
     lb_print("Type /lb settings to see the current settings.")
     lb_print("Type /lb log to see the last 20 changes to your EPGP values.")
   elseif msg == "settings" then
+    LBSettingsFrame:Show()
     lb_print("Frame shown duration: " .. FrameShownDuration .. " seconds.")
     lb_print("Auto closing: " .. (FrameAutoClose and "on" or "off"))
     lb_print("Master Looter: " .. (masterLooter or "unknown"))

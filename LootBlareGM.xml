@@ -20,7 +20,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					<Anchors>
 						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
 							<Offset>
-								<AbsDimension x="-192" y="0"/>
+								<AbsDimension x="-175" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -114,7 +114,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
         
     </Frame>
 
-	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM">
+	<Frame name="LootMasterFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="MEDIUM" resizable="true">
         <Size>
             <AbsDimension x="400" y="400" />
         </Size>
@@ -139,9 +139,9 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 			<Layer level="FOREGROUND">
 				<FontString name="Column 1 Header" inherits="GameFontNormalSmall" text="Player">
 					<Anchors>
-						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$parent">
+						<Anchor point="CENTER" relativePoint="TOPLEFT" relativeTo="$parent">
 							<Offset>
-								<AbsDimension x="-160" y="180"/>
+								<AbsDimension x="42" y="-25"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -178,6 +178,15 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 						<Anchor point="CENTER" relativePoint="CENTER" relativeTo="Column 4 Header">
 							<Offset>
 								<AbsDimension x="70" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="ConfirmationLabel" inherits="GameFontNormalSmall" hidden="true" text="">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="15" y="58"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -220,7 +229,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
 						<Offset>
-							<AbsDimension x="10" y="8"/>
+							<AbsDimension x="10" y="25"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -287,7 +296,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
 						<Offset>
-							<AbsDimension x="-10" y="8"/>
+							<AbsDimension x="-10" y="25"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -297,19 +306,46 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 		    </Button>
+			<Button name="UndoButton" inherits="UIPanelButtonTemplate2" text="Undo" hidden="true">
+			    <Size>
+					<AbsDimension x="70" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="LootMasterFrame" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="10" y="4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						AwardUndo()
+					</OnClick>
+				</Scripts>
+		    </Button>
 			<ScrollFrame name="LootMasterScrollFrame" parent="LootMasterFrame" inherits="FauxScrollFrameTemplate">
     			<Anchors>
         			<Anchor point="TOPLEFT" relativeTo="LootMasterFrame" relativePoint="TOPLEFT">
 						<Offset>
-							<AbsDimension x="30" y="-30"/>
+							<AbsDimension x="15" y="-30"/>
 						</Offset>
 					</Anchor>
 					<Anchor point="BOTTOMRIGHT" relativeTo="LootMasterFrame" relativePoint="BOTTOMRIGHT">
 						<Offset>
-							<AbsDimension x="-30" y="70"/>
+							<AbsDimension x="-20" y="70"/>
 						</Offset>
 					</Anchor>
     			</Anchors>
+				<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+					<BackgroundInsets>
+						<AbsInset left="4" right="4" top="4" bottom="4"/>
+					</BackgroundInsets>
+					<EdgeSize>
+						<AbsValue val="16"/>
+					</EdgeSize>
+					<BorderColor r="0.6" g="0.6" b="0.6"/>
+					<Color r="0.0" g="0.0" b="0.0" a="0.0"/>
+				</Backdrop>
     			<Scripts>
     	    		<OnVerticalScroll>
     	        		FauxScrollFrame_OnVerticalScroll(20, UpdateLMScrollFrame);
@@ -319,6 +355,33 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
     	    		</OnShow>
     			</Scripts>
 			</ScrollFrame>
+			<Button name="LootMasterResizeButton" >
+                <NormalTexture file="Interface\AddOns\LootBlareGM\images\ResizeGrip"/>
+                <HighlightTexture file="Interface\AddOns\LootBlareGM\images\ResizeGrip" alphaMode="ADD"/>
+                <Size>
+                    <AbsDimension x="16" y="16"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnMouseDown>
+                        LootMasterFrame:StartSizing("BOTTOM")
+                        LootMasterFrame:SetUserPlaced(true)
+                        
+                    </OnMouseDown>
+                    <OnMouseUp>
+                        LootMasterFrame:StopMovingOrSizing()
+                        LMScrollFrameResized()
+                    </OnMouseUp>
+                    <OnClick>
+                    </OnClick>
+                </Scripts>
+            </Button>
         </Frames>
     </Frame>
 
@@ -687,5 +750,489 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				</FontString>
 			</Layer>
 		</Layers>
+	</Frame>
+	<Frame name="LBSettingsFrame" toplevel="true enable" enableMouse= "true" movable="true" parent="UIParent" hidden="true" frameStrata="HIGH">
+		<Size>
+			<AbsDimension x="400" y="300" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="-50" y="0" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border">
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BorderColor r="0.6" g="0.6" b="0.6"/>
+			<Color r="0.0" g="0.0" b="0.0" a="0.92"/>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				LBSettings_Update();
+			</OnLoad>
+			 <OnHide>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnHide>
+			<OnDragStart>
+				if(arg1 == "LeftButton") then
+					LMSettings_StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnDragStop>
+			<OnMouseUp>
+				LBSettingsFrame:StopMovingOrSizing();
+			</OnMouseUp>
+			<OnShow>
+				LBSettings_Update();
+			</OnShow>
+		</Scripts>
+		<Layers>
+			<Layer level="FOREGROUND">
+				<FontString name="LBSettingsTitle" inherits="GameFontNormalLarge" text="LootBlareGM Settings">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="RollColorSettingsLabel" inherits="GameFontNormalLarge" text="Roll Type Colors">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="-80" y="100"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="RoleColorSettingsLabel" inherits="GameFontNormalLarge" text="Role Colors">
+					<Anchors>
+						<Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="100" y="100"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="FrameDurationLabel" inherits="GameFontNormalLarge" text="Frame Duration: ">
+					<Anchors>
+						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="90" y="-50"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="AutoCloseLabel" inherits="GameFontNormalLarge" text="Auto Close: ">
+					<Anchors>
+						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="90" y="-80"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="LBSettingsFrameDuration" inherits="GameFontNormalLarge" text="">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+							<Offset>
+								<AbsDimension x="115" y="-51"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="LBSettingsCloseButton" inherits="UIPanelCloseButton" >
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="LBSettingsFrame" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="0" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="LBSettingsResetButton" inherits="UIPanelButtonTemplate2" text="Reset Windows">
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LBSettingsFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ResetLBWindows()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="LBSettingsResetColorsButton" inherits="UIPanelButtonTemplate2" text="Reset Colors">
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="LBSettingsFrame" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-110" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ResetLBColors()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MSSRColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="MSSRColorLabel" inherits="GameFontNormalLarge" text="MSSR Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="MSSRColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="70"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerMSSR()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MSColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="MSColorLabel" inherits="GameFontNormalLarge" text="MS Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="MSColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="40"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerMS()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="OSSRColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="OSSRColorLabel" inherits="GameFontNormalLarge" text="OSSR Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="OSSRColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerOSSR()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="OSColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="OSColorLabel" inherits="GameFontNormalLarge" text="OS Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="OSColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="-20"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerOS()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="TMSRColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="TMSRColorLabel" inherits="GameFontNormalLarge" text="TMSR Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="TMSRColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="-50"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerTMSR()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="TMColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="100" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="TMColorLabel" inherits="GameFontNormalLarge" text="TM Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="TMColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="-80" y="-80"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerTM()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="CoreColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="120" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="CoreColorLabel" inherits="GameFontNormalLarge" text="Core Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="CoreColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="100" y="70"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerCore()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="RaiderColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="120" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="RaiderColorLabel" inherits="GameFontNormalLarge" text="Raider Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="RaiderColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="100" y="40"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerRaider()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="CasualColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="120" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="CasualColorLabel" inherits="GameFontNormalLarge" text="Casual Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="CasualColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="100" y="10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerCasual()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="NonGuildieColorButton" inherits="UIPanelButtonTemplate" >
+				<Size>
+					<AbsDimension x="120" y="32"/>
+				</Size>
+				<Layers>
+					<Layer level="FOREGROUND">
+						<FontString name="NonGuildieColorLabel" inherits="GameFontNormalLarge" text="Default Color">
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="NonGuildieColorButton" relativePoint="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="100" y="-20"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ShowColorPickerNonGuildie()
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<EditBox name="LBSettingsFrameDurationBox" inherits="InputBoxTemplate" autoFocus="false" letters="2">
+				<Size>
+					<AbsDimension x="18" y="34"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="119" y="-51"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnterPressed>
+						UpdateFrameDuration()
+					</OnEnterPressed>
+						
+				</Scripts>
+			</EditBox>
+			<CheckButton name="LBSettingsAutoCloseCheckButton" inherits="UICheckButtonTemplate">
+				<Size>
+					<AbsDimension x="32" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="LBSettingsFrame" relativePoint="CENTER">
+						<Offset>
+							<AbsDimension x="110" y="-80"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ToggleAutoClose()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+		</Frames>
 	</Frame>
 </Ui>
