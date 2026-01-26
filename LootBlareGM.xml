@@ -306,7 +306,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 					</OnClick>
 				</Scripts>
 		    </Button>
-			<Button name="UndoButton" inherits="UIPanelButtonTemplate2" text="Undo Award" hidden="true">
+			<Button name="UndoButton" inherits="UIPanelButtonTemplate2" text="Undo" hidden="true">
 			    <Size>
 					<AbsDimension x="70" y="32"/>
 				</Size>
