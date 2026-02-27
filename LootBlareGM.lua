@@ -26,6 +26,7 @@ local tmogRollCap = 50
 --EPGP Settings--
 PriceDB = nil
 local CurrentSelection
+local Awarded
 local FixSelected
 local RaidEPGP = 0
 local MinGP = 100
@@ -77,6 +78,8 @@ local LB_BID = "Bid on item: "
 local LB_AWARD = "Awarded to: "
 local LB_UNDO = "Undo award to: "
 local LB_EPGPSET = "EPGP Set: "
+
+local Undomessage = ""
 
 local R, G, B, A = 0.0, 0.0, 0.0, 1.0
 
@@ -928,6 +931,7 @@ function AwardSend()
     ConfirmationLabel:SetText("Item awarded to " .. CurrentSelection.player .. " for " .. CurrentSelection.price)
     ConfirmationLabel:Show()
     SendAddonMessage(LB_PREFIX, LB_AWARD .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    Awarded = CurrentSelection
     UndoButton:Show()
   end
   AwardConfirm:Hide()
@@ -936,9 +940,10 @@ end
 function AwardUndo()
   if AwardSent == 1 then
     AwardSent = 0
-    ConfirmationLabel:SetText("Last award to " .. CurrentSelection.player .. " for " .. CurrentSelection.price .. " has been undone.")
-    SendAddonMessage(LB_PREFIX, LB_UNDO .. " =" .. UnitName("player") .. "= -" ..CurrentSelection.player.. "- +" ..CurrentSelection.price.. "+ ", "RAID")
+    ConfirmationLabel:SetText("Last award to " .. Awarded.player .. " for " .. Awarded.price .. " has been undone.")
+    SendAddonMessage(LB_PREFIX, LB_UNDO .. " =" .. UnitName("player") .. "= -" ..Awarded.player.. "- +" ..Awarded.price.. "+ ", "RAID")
     UndoButton:Hide()
+    
   end
 end
 
